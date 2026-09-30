@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mensajes en vivo · Aruba Apple</title>
+<title>Mensajes · Aruba Apple</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -11,64 +11,151 @@
   --bg:#0b0710; --card:rgba(255,255,255,0.075); --card-b:rgba(255,255,255,0.18);
   --grad1:#ff2fb0; --grad2:#b23bf0; --pink2:#ff6fc6;
   --txt:#f3eef6; --txt2:#a99cb0; --txt3:#746a7c;
-  --green:#4ee08a; --red:#ff5470;
+  --green:#4ee08a; --red:#ff5470; --amber:#ffcf5c;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
 body{
   background:var(--bg);
   background-image:
     radial-gradient(700px 500px at -5% -10%, rgba(255,45,168,0.35), transparent 60%),
     radial-gradient(700px 500px at 105% 110%, rgba(130,30,220,0.30), transparent 60%);
-  background-attachment:fixed; min-height:100vh;
-  color:var(--txt); font-family:'Inter',sans-serif; padding:28px;
+  background-attachment:fixed;
+  color:var(--txt); font-family:'Inter',sans-serif;
+  display:flex; flex-direction:column; overflow:hidden;
 }
-h1{font-family:'Manrope'; font-weight:800; font-size:26px; margin-bottom:4px;}
-.sub{color:var(--txt2); font-size:13px; margin-bottom:22px;}
-#estado{font-size:12px; margin-bottom:18px;}
-.columns{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px;}
-.card{
-  background:var(--card); border:2px solid var(--card-b); border-radius:18px; padding:20px;
-  animation:pulseGlow 2.8s ease-in-out infinite;
-}
-@keyframes pulseGlow{
-  0%,100%{ box-shadow:0 0 18px rgba(var(--glow-rgb),0.2); border-color:rgba(var(--glow-rgb),0.5); }
-  50%{ box-shadow:0 0 40px rgba(var(--glow-rgb),0.5); border-color:rgba(var(--glow-rgb),0.9); }
-}
-.card h2{font-family:'Manrope'; font-size:16px; margin-bottom:4px;}
-.badge{display:inline-block; font-size:11px; padding:3px 10px; border-radius:20px; background:rgba(255,255,255,0.08); color:var(--txt2); margin-bottom:12px;}
-.field{margin-bottom:8px;}
-.field label{display:block; font-size:11px; color:var(--txt3); margin-bottom:3px;}
-input{
-  width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px;
-  color:var(--txt); font-family:'Inter'; font-size:13px; padding:8px 10px; outline:none;
-}
-input:focus{border-color:var(--pink2);}
-.btn{
-  background:linear-gradient(135deg,var(--grad1),var(--grad2)); border:none; color:#fff;
-  padding:9px 14px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; width:100%; margin-top:6px;
-}
+h1{font-family:'Manrope'; font-weight:800; font-size:18px;}
+button{font-family:inherit; cursor:pointer;}
+input{font-family:inherit;}
+
+#loginOverlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;
+  background:var(--bg); background-image:
+    radial-gradient(700px 500px at -5% -10%, rgba(255,45,168,0.35), transparent 60%),
+    radial-gradient(700px 500px at 105% 110%, rgba(130,30,220,0.30), transparent 60%);}
+.login-card{width:360px; max-width:100%; background:var(--card); border:2px solid var(--card-b); border-radius:18px; padding:30px;}
+.login-brand{display:flex; align-items:center; gap:10px; margin-bottom:22px; justify-content:center;}
+.login-brand .dot{width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); box-shadow:0 0 14px var(--pink2);}
+.login-brand span{font-family:'Manrope'; font-weight:800; font-size:19px;}
+.login-card h2{font-size:16px; margin-bottom:4px; text-align:center;}
+.login-sub{color:var(--txt2); font-size:12.5px; margin-bottom:20px; text-align:center;}
+.field{margin-bottom:12px;}
+.field label{display:block; font-size:11.5px; color:var(--txt3); margin-bottom:4px;}
+.field input{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:9px 10px; outline:none;}
+.field input:focus{border-color:var(--pink2);}
+.btn{background:linear-gradient(135deg,var(--grad1),var(--grad2)); border:none; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; width:100%;}
 .btn.ghost{background:transparent; border:1px solid var(--card-b); color:var(--txt2);}
-.list{
-  margin-top:14px; border:1px solid var(--card-b); border-radius:12px; background:rgba(0,0,0,0.2);
-  height:320px; overflow-y:auto; padding:12px; display:flex; flex-direction:column;
+.btn.small{padding:7px 12px; font-size:12px; width:auto;}
+#loginError{color:var(--red); font-size:12px; margin-top:10px; text-align:center; min-height:16px;}
+
+#app{display:none; flex-direction:column; height:100vh; width:100%;}
+.topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; flex-wrap:wrap; gap:8px;}
+.topbar .brand{display:flex; align-items:center; gap:8px;}
+.topbar .brand .dot{width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); flex-shrink:0;}
+.topbar-right{display:flex; align-items:center; gap:14px; font-size:12px; color:var(--txt2); flex-wrap:wrap;}
+.topbar-right a{color:var(--pink2); cursor:pointer;}
+.topbar-right a:hover{text-decoration:underline;}
+
+.tabs{display:flex; gap:8px; padding:10px 20px; flex-shrink:0; overflow-x:auto;}
+.tab{padding:8px 16px; border-radius:20px; border:1px solid var(--card-b); background:rgba(255,255,255,0.03); color:var(--txt2); font-size:13px; font-weight:600; white-space:nowrap; display:flex; align-items:center; gap:8px;}
+.tab.active{color:#fff; border-color:transparent;}
+.tab[data-canal="whatsapp"].active{background:linear-gradient(135deg,#25d366,#128c4a);}
+.tab[data-canal="messenger"].active{background:linear-gradient(135deg,#00b2ff,#006aff);}
+.tab[data-canal="instagram"].active{background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);}
+.tab .dot-estado{width:7px; height:7px; border-radius:50%; background:var(--txt3); flex-shrink:0;}
+.tab .dot-estado.ok{background:var(--green);}
+.tab .unread{background:var(--red); color:#fff; font-size:10px; font-weight:700; min-width:17px; height:17px; border-radius:9px; display:none; align-items:center; justify-content:center; padding:0 5px;}
+
+.canal-panel{display:none; flex:1; overflow:hidden; flex-direction:column; min-height:0;}
+.canal-panel.active{display:flex;}
+
+.config-box{margin:0 20px 14px; background:var(--card); border:1px solid var(--card-b); border-radius:14px; padding:16px; display:none; flex-shrink:0;}
+.config-box.open{display:block;}
+.config-box .badge{display:inline-block; font-size:11px; padding:3px 10px; border-radius:20px; background:rgba(255,255,255,0.08); color:var(--txt2); margin-bottom:10px;}
+.config-box .cerrar{float:right; color:var(--txt3); font-size:12px; cursor:pointer;}
+
+.chat-shell{flex:1; display:flex; overflow:hidden; margin:0 20px 20px; border:1px solid var(--card-b); border-radius:16px; background:rgba(0,0,0,0.15); min-height:0; position:relative;}
+.conv-list{width:290px; flex-shrink:0; border-right:1px solid var(--card-b); overflow-y:auto;}
+.conv-item{display:flex; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; align-items:center;}
+.conv-item:hover{background:rgba(255,255,255,0.03);}
+.conv-item.active{background:rgba(255,45,168,0.12);}
+.conv-avatar{width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0;}
+.conv-info{flex:1; min-width:0;}
+.conv-info .nombre{font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; gap:6px;}
+.conv-info .nombre .hora{font-size:10.5px; color:var(--txt3); font-weight:400; flex-shrink:0;}
+.conv-info .preview{font-size:12px; color:var(--txt2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
+.conv-unread{background:var(--pink2); color:#1a0a14; font-size:10px; font-weight:800; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px; flex-shrink:0;}
+.conv-empty{color:var(--txt3); font-size:12.5px; text-align:center; padding:30px 16px;}
+
+.chat-area{flex:1; display:flex; flex-direction:column; min-width:0;}
+.chat-header{padding:14px 18px; border-bottom:1px solid var(--card-b); display:flex; align-items:center; gap:10px; flex-shrink:0;}
+.chat-header .conv-avatar{width:32px; height:32px; font-size:12px;}
+.chat-header .nombre{font-size:14px; font-weight:700;}
+.chat-header .idcontacto{font-size:11px; color:var(--txt3);}
+.chat-messages{flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:8px;}
+.msg{max-width:72%; padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.4; word-wrap:break-word;}
+.msg.in{background:rgba(255,255,255,0.08); align-self:flex-start; border-bottom-left-radius:4px;}
+.msg.out{background:linear-gradient(135deg,var(--grad1),var(--grad2)); color:#fff; align-self:flex-end; border-bottom-right-radius:4px;}
+.msg .hora{font-size:10px; opacity:0.65; margin-top:4px; text-align:right;}
+.chat-vacio{margin:auto; color:var(--txt3); font-size:13px; text-align:center; padding:30px;}
+.reply-box{display:flex; gap:8px; padding:14px; border-top:1px solid var(--card-b); flex-shrink:0;}
+.reply-box input{flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:10px; color:var(--txt); font-size:13.5px; padding:10px 14px; outline:none;}
+.reply-box input:focus{border-color:var(--pink2);}
+.reply-box button{width:auto; padding:10px 18px; border-radius:10px; white-space:nowrap;}
+
+.back-btn{display:none; color:var(--pink2); font-size:13px;}
+@media (max-width:760px){
+  .chat-shell{margin:0 10px 10px;}
+  .conv-list{width:100%; border-right:none;}
+  .chat-area{position:absolute; inset:0; background:#120a17; display:none; border-radius:16px;}
+  .chat-shell.chat-open .conv-list{display:none;}
+  .chat-shell.chat-open .chat-area{display:flex;}
+  .back-btn{display:inline-flex;}
+  .config-box{margin:0 10px 14px;}
 }
-.msg{max-width:85%; margin-bottom:8px; padding:8px 12px; border-radius:12px; font-size:13px; line-height:1.4;}
-.msg.in{background:rgba(255,255,255,0.07); align-self:flex-start;}
-.msg.out{background:linear-gradient(135deg,var(--grad1),var(--grad2)); color:#fff; align-self:flex-end;}
-.msg .nombre{font-size:10.5px; color:var(--txt3); margin-bottom:2px;}
-.reply{display:flex; gap:8px; margin-top:10px;}
-.reply input{flex:1;}
-.reply button{width:auto; margin-top:0; white-space:nowrap;}
-.err{color:var(--red); font-size:11px; text-align:center; margin-top:4px;}
-.vacio{color:var(--txt3); font-size:12px; text-align:center; margin:auto;}
 </style>
 </head>
 <body>
 
-<h1>Mensajes en vivo · Aruba Apple</h1>
-<div class="sub">WhatsApp, Messenger e Instagram, conectados en tiempo real.</div>
-<div id="estado"></div>
-<div class="columns" id="grid"></div>
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="login-brand"><span class="dot"></span><span>Aruba Apple</span></div>
+    <h2>Mensajes</h2>
+    <div class="login-sub">Ingresá tu usuario y contraseña para continuar.</div>
+    <div class="field"><label>Usuario</label><input id="loginUsuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
+    <div class="field"><label>Contraseña</label><input id="loginClave" type="password" onkeydown="if(event.key==='Enter') intentarLogin()"></div>
+    <button class="btn" onclick="intentarLogin()">Ingresar</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span><h1>Mensajes · Aruba Apple</h1></div>
+    <div class="topbar-right">
+      <span id="estadoConexion"></span>
+      <span>Sesión: <b id="sesionNombre">-</b></span>
+      <a id="linkConfigAdmin" onclick="toggleConfigGlobal()" style="display:none;">Configurar canales</a>
+      <a id="linkAccesos" onclick="toggleAccesosBox()" style="display:none;">Gestionar accesos</a>
+      <a onclick="cerrarSesion()">Cerrar sesión</a>
+    </div>
+  </div>
+
+  <div id="accesosBox" class="config-box" style="margin:0 20px; display:none;">
+    <span class="cerrar" onclick="toggleAccesosBox()">Cerrar ✕</span>
+    <div class="badge">Acceso de administrador y de agente</div>
+    <div class="field"><label>Usuario administrador</label><input id="accUsuAdmin" placeholder="admin"></div>
+    <div class="field"><label>Nueva contraseña administrador (opcional)</label><input id="accClaveAdmin" type="text" placeholder="Dejar vacío para no cambiarla"></div>
+    <button class="btn small" onclick="guardarAcceso('admin')">Actualizar administrador</button>
+    <div id="acc_admin_estado" style="font-size:11px; margin:6px 0 14px;"></div>
+    <div class="field"><label>Usuario agente (la persona que solo responde mensajes)</label><input id="accUsuAgente" placeholder="agente"></div>
+    <div class="field"><label>Nueva contraseña agente (opcional)</label><input id="accClaveAgente" type="text" placeholder="Dejar vacío para no cambiarla"></div>
+    <button class="btn small" onclick="guardarAcceso('agente')">Actualizar agente</button>
+    <div id="acc_agente_estado" style="font-size:11px; margin-top:6px;"></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="paneles"></div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://vbbdxqxnjzziqteomuxp.supabase.co';
@@ -76,129 +163,321 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const CANALES = [
-  { id:'whatsapp', nombre:'WhatsApp Business', glow:'78,224,138', campos:[
+  { id:'whatsapp', nombre:'WhatsApp', campos:[
       {k:'numero', label:'Número (con código de país)', placeholder:'Ej: 5491122334455'},
       {k:'phoneId', label:'Phone Number ID', placeholder:'De Meta for Developers'},
       {k:'token', label:'Access Token', placeholder:'Token de acceso de la API'}
     ]},
-  { id:'messenger', nombre:'Messenger', glow:'0,132,255', campos:[
+  { id:'messenger', nombre:'Messenger', campos:[
       {k:'pagina', label:'Nombre de la página', placeholder:'Ej: nombredetupagina'},
       {k:'pageId', label:'Page ID', placeholder:'ID de la página de Facebook'},
       {k:'token', label:'Page Access Token', placeholder:'Token de acceso de la página'}
     ]},
-  { id:'instagram', nombre:'Instagram', glow:'255,140,0', campos:[
+  { id:'instagram', nombre:'Instagram', campos:[
       {k:'usuario', label:'Usuario', placeholder:'Ej: tuusuario (sin @)'},
       {k:'igId', label:'IG Business Account ID', placeholder:'De Meta for Developers'},
       {k:'token', label:'Access Token', placeholder:'Token de acceso de la API'}
     ]}
 ];
 
-const ultimoContacto = {};
+let sesionActual = null;
+let conversaciones = {};
+let conversacionAbierta = {};
 
+function esAdmin(){ return sesionActual && sesionActual.rol === 'admin'; }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function iniciales(nombre, de){
+  const base = (nombre || de || '?').trim();
+  const partes = base.split(/\s+/).filter(Boolean);
+  if(partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+  return base.slice(0,2).toUpperCase();
+}
+function fmtHora(iso){ try{ return new Date(iso).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+function fmtHoraLista(iso){
+  try{
+    const d = new Date(iso); const hoy = new Date();
+    if(d.toDateString() === hoy.toDateString()) return d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+  }catch(e){ return ''; }
+}
 
+/* ---------- LOGIN ---------- */
+async function intentarLogin(){
+  const u = document.getElementById('loginUsuario').value.trim();
+  const p = document.getElementById('loginClave').value;
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+  if(!u || !p){ err.textContent = 'Completá usuario y contraseña.'; return; }
+  try{
+    const { data, error } = await sb.from('mensajeria_accesos').select('rol,usuario,clave');
+    if(error) throw error;
+    const match = (data||[]).find(r => r.usuario === u && r.clave === p);
+    if(!match){ err.textContent = 'Usuario o contraseña incorrectos.'; return; }
+    sesionActual = { rol: match.rol, nombre: match.rol==='admin' ? 'Administrador' : 'Agente de mensajes' };
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('sesionNombre').textContent = sesionActual.nombre;
+    if(esAdmin()){
+      document.getElementById('linkConfigAdmin').style.display = 'inline';
+      document.getElementById('linkAccesos').style.display = 'inline';
+    }
+    iniciarApp();
+  }catch(e){
+    err.textContent = 'No se pudo verificar el acceso: ' + (e.message||e);
+  }
+}
+function cerrarSesion(){ location.reload(); }
+
+/* ---------- GESTIÓN DE ACCESOS (solo admin) ---------- */
+function toggleAccesosBox(){
+  document.getElementById('accesosBox').classList.toggle('open');
+}
+async function guardarAcceso(rol){
+  if(!esAdmin()) return;
+  const usuario = document.getElementById(rol==='admin'?'accUsuAdmin':'accUsuAgente').value.trim();
+  const clave = document.getElementById(rol==='admin'?'accClaveAdmin':'accClaveAgente').value;
+  const estado = document.getElementById(`acc_${rol}_estado`);
+  if(!usuario){ estado.textContent = 'El usuario no puede quedar vacío.'; estado.style.color = 'var(--red)'; return; }
+  estado.textContent = 'Guardando...'; estado.style.color = 'var(--txt3)';
+  try{
+    const patch = { usuario };
+    if(clave) patch.clave = clave;
+    const { error } = await sb.from('mensajeria_accesos').update(patch).eq('rol', rol);
+    if(error) throw error;
+    estado.textContent = 'Actualizado ✓'; estado.style.color = 'var(--green)';
+    document.getElementById(rol==='admin'?'accClaveAdmin':'accClaveAgente').value = '';
+  }catch(e){
+    estado.textContent = 'Error: ' + (e.message||e); estado.style.color = 'var(--red)';
+  }
+}
+
+/* ---------- CONFIG POR CANAL (solo admin) ---------- */
 async function cargarConfig(id){
   const { data } = await sb.from('canales_config').select('config,activo').eq('canal', id).maybeSingle();
   return data || { config:{}, activo:false };
 }
-
 async function guardarConfig(id){
-  const canal = CANALES.find(c=>c.id===id);
+  if(!esAdmin()) return;
+  const canal = CANALES.find(c => c.id === id);
   const cfg = {};
-  canal.campos.forEach(f=>{ cfg[f.k] = document.getElementById(`c_${id}_${f.k}`).value.trim(); });
+  canal.campos.forEach(f => { cfg[f.k] = document.getElementById(`c_${id}_${f.k}`).value.trim(); });
   const estado = document.getElementById(`c_${id}_estado`);
   estado.textContent = 'Guardando...'; estado.style.color = 'var(--txt3)';
   try{
     const { error } = await sb.functions.invoke('guardar-config-canal', { body: { canal:id, config:cfg } });
     if(error) throw error;
     estado.textContent = 'Guardado ✓'; estado.style.color = 'var(--green)';
+    const badge = document.getElementById(`c_${id}_badge`);
+    if(badge) badge.textContent = 'conectado';
+    const dot = document.getElementById(`dotEstado_${id}`);
+    if(dot) dot.classList.add('ok');
+    canal.campos.forEach(f => { document.getElementById(`c_${id}_${f.k}`).value = ''; });
+    setTimeout(() => toggleConfigCanal(id, false), 1000);
   }catch(e){
-    estado.textContent = 'Error: '+(e.message||e); estado.style.color = 'var(--red)';
+    estado.textContent = 'Error: ' + (e.message||e); estado.style.color = 'var(--red)';
   }
 }
+function toggleConfigCanal(id, forzar){
+  const box = document.getElementById(`configBox_${id}`);
+  if(!box) return;
+  const abrir = forzar !== undefined ? forzar : !box.classList.contains('open');
+  box.classList.toggle('open', abrir);
+}
+function toggleConfigGlobal(){ CANALES.forEach(c => toggleConfigCanal(c.id)); }
 
-function pintarMensaje(canalId, m){
-  const cont = document.getElementById(`list_${canalId}`);
+/* ---------- CONVERSACIONES ---------- */
+async function cargarHistorial(canalId){
+  const { data, error } = await sb.from('mensajes').select('*').eq('canal', canalId).order('creado_en', { ascending:true });
+  conversaciones[canalId] = {};
+  if(!error){ (data||[]).forEach(m => agregarMensajeAConversacion(canalId, m)); }
+  renderListaConversaciones(canalId);
+  if(conversacionAbierta[canalId]) renderChatAbierto(canalId);
+}
+
+function agregarMensajeAConversacion(canalId, m){
+  if(!conversaciones[canalId]) conversaciones[canalId] = {};
+  const de = m.de;
+  if(!de) return;
+  if(!conversaciones[canalId][de]) conversaciones[canalId][de] = { de, nombre:null, mensajes:[], noLeidos:0, ultimoTime:null };
+  const conv = conversaciones[canalId][de];
+  if(m.direccion === 'entrante' && m.nombre_contacto) conv.nombre = m.nombre_contacto;
+  conv.mensajes.push(m);
+  conv.ultimoTexto = m.texto;
+  conv.ultimoTime = m.creado_en;
+  conv.ultimoDireccion = m.direccion;
+  if(m.direccion === 'entrante' && !m.leido) conv.noLeidos++;
+}
+
+function renderListaConversaciones(canalId){
+  const cont = document.getElementById(`convList_${canalId}`);
   if(!cont) return;
-  const vacio = cont.querySelector('.vacio');
-  if(vacio) vacio.remove();
-  const esIn = m.direccion === 'entrante';
-  if(esIn && m.de) ultimoContacto[canalId] = m.de;
-  const div = document.createElement('div');
-  div.className = 'msg ' + (esIn ? 'in' : 'out');
-  div.innerHTML = (esIn && m.nombre_contacto ? `<div class="nombre">${escapeHtml(m.nombre_contacto)}</div>` : '') + escapeHtml(m.texto);
-  cont.appendChild(div);
-  cont.scrollTop = cont.scrollHeight;
+  const convs = Object.values(conversaciones[canalId] || {}).sort((a,b) => new Date(b.ultimoTime||0) - new Date(a.ultimoTime||0));
+  actualizarBadgeTab(canalId, convs.reduce((s,c) => s + c.noLeidos, 0));
+  if(!convs.length){ cont.innerHTML = '<div class="conv-empty">Todavía no hay conversaciones.<br>Cuando alguien te escriba, va a aparecer acá.</div>'; return; }
+  cont.innerHTML = convs.map(c => `
+    <div class="conv-item ${conversacionAbierta[canalId]===c.de?'active':''}" onclick="abrirConversacion('${canalId}','${encodeURIComponent(c.de)}')">
+      <div class="conv-avatar">${iniciales(c.nombre, c.de)}</div>
+      <div class="conv-info">
+        <div class="nombre"><span>${escapeHtml(c.nombre || c.de)}</span><span class="hora">${fmtHoraLista(c.ultimoTime)}</span></div>
+        <div class="preview">${c.ultimoDireccion==='saliente' ? 'Vos: ' : ''}${escapeHtml(c.ultimoTexto||'')}</div>
+      </div>
+      ${c.noLeidos>0 ? `<div class="conv-unread">${c.noLeidos}</div>` : ''}
+    </div>
+  `).join('');
 }
 
-async function cargarHistorial(id){
-  const cont = document.getElementById(`list_${id}`);
-  const { data, error } = await sb.from('mensajes').select('*').eq('canal', id).order('creado_en', { ascending:true }).limit(50);
-  if(error){ cont.innerHTML = `<div class="vacio">No se pudo cargar: ${escapeHtml(error.message)}</div>`; return; }
-  cont.innerHTML = data.length ? '' : '<div class="vacio">Sin conversaciones todavía.</div>';
-  data.forEach(m=>pintarMensaje(id, m));
+function actualizarBadgeTab(canalId, total){
+  const tab = document.querySelector(`.tab[data-canal="${canalId}"] .unread`);
+  if(!tab) return;
+  if(total > 0){ tab.textContent = total > 99 ? '99+' : total; tab.style.display = 'flex'; }
+  else{ tab.style.display = 'none'; }
 }
 
-async function enviar(id){
-  const input = document.getElementById(`input_${id}`);
-  const texto = input.value.trim();
-  const destinatario = ultimoContacto[id];
-  const cont = document.getElementById(`list_${id}`);
-  if(!texto) return;
-  if(!destinatario){
-    const av = document.createElement('div'); av.className='err'; av.textContent='Todavía no hay ningún contacto que te haya escrito acá.';
-    cont.appendChild(av); return;
+async function abrirConversacion(canalId, deCodificado){
+  const de = decodeURIComponent(deCodificado);
+  conversacionAbierta[canalId] = de;
+  const conv = conversaciones[canalId][de];
+  if(conv && conv.noLeidos > 0){
+    conv.noLeidos = 0;
+    conv.mensajes.forEach(m => { if(m.direccion==='entrante') m.leido = true; });
+    sb.from('mensajes').update({ leido:true }).eq('canal', canalId).eq('de', de).eq('direccion','entrante').eq('leido', false).then(()=>{});
   }
+  renderListaConversaciones(canalId);
+  renderChatAbierto(canalId);
+  const shell = document.getElementById(`chatShell_${canalId}`);
+  if(shell) shell.classList.add('chat-open');
+}
+function volverALista(canalId){
+  const shell = document.getElementById(`chatShell_${canalId}`);
+  if(shell) shell.classList.remove('chat-open');
+}
+
+function renderChatAbierto(canalId){
+  const de = conversacionAbierta[canalId];
+  const area = document.getElementById(`chatArea_${canalId}`);
+  if(!area) return;
+  if(!de || !conversaciones[canalId] || !conversaciones[canalId][de]){
+    area.innerHTML = `<div class="chat-vacio">Elegí una conversación de la izquierda para ver los mensajes.</div>`;
+    return;
+  }
+  const conv = conversaciones[canalId][de];
+  area.innerHTML = `
+    <div class="chat-header">
+      <span class="back-btn" onclick="volverALista('${canalId}')">‹ Volver</span>
+      <div class="conv-avatar">${iniciales(conv.nombre, conv.de)}</div>
+      <div><div class="nombre">${escapeHtml(conv.nombre || conv.de)}</div><div class="idcontacto">${escapeHtml(conv.de)}</div></div>
+    </div>
+    <div class="chat-messages" id="chatMsgs_${canalId}"></div>
+    <div class="reply-box">
+      <input id="chatInput_${canalId}" placeholder="Escribí una respuesta..." onkeydown="if(event.key==='Enter') enviarDesdeChat('${canalId}')">
+      <button class="btn" onclick="enviarDesdeChat('${canalId}')">Enviar</button>
+    </div>`;
+  const msgsCont = document.getElementById(`chatMsgs_${canalId}`);
+  conv.mensajes.forEach(m => pintarBurbuja(msgsCont, m));
+  msgsCont.scrollTop = msgsCont.scrollHeight;
+}
+
+function pintarBurbuja(cont, m){
+  if(!cont) return;
+  const div = document.createElement('div');
+  div.className = 'msg ' + (m.direccion === 'entrante' ? 'in' : 'out');
+  div.innerHTML = `${escapeHtml(m.texto)}<div class="hora">${fmtHora(m.creado_en)}</div>`;
+  cont.appendChild(div);
+}
+
+async function enviarDesdeChat(canalId){
+  const input = document.getElementById(`chatInput_${canalId}`);
+  const texto = input.value.trim();
+  const de = conversacionAbierta[canalId];
+  if(!texto || !de) return;
   input.disabled = true;
   try{
-    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:id, destinatario, texto } });
-    if(error || (data && data.error)) throw new Error((data&&data.error)||error.message);
+    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:canalId, destinatario:de, texto } });
+    if(error || (data && data.error)) throw new Error((data && data.error) || error.message);
     input.value = '';
   }catch(e){
-    const av = document.createElement('div'); av.className='err'; av.textContent='No se pudo enviar: '+(e.message||e);
-    cont.appendChild(av);
+    const msgsCont = document.getElementById(`chatMsgs_${canalId}`);
+    if(msgsCont){
+      const av = document.createElement('div');
+      av.style.cssText = 'color:var(--red); font-size:11px; text-align:center; padding:6px;';
+      av.textContent = 'No se pudo enviar: ' + (e.message || e);
+      msgsCont.appendChild(av);
+      msgsCont.scrollTop = msgsCont.scrollHeight;
+    }
   }
   input.disabled = false;
   input.focus();
 }
 
-async function render(){
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
+/* ---------- TABS ---------- */
+function mostrarCanal(id){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.canal === id));
+  document.querySelectorAll('.canal-panel').forEach(p => p.classList.toggle('active', p.id === `panel_${id}`));
+}
+
+/* ---------- INICIO ---------- */
+async function iniciarApp(){
+  const admin = esAdmin();
+
+  document.getElementById('tabs').innerHTML = CANALES.map((c,i) => `
+    <div class="tab ${i===0?'active':''}" data-canal="${c.id}" onclick="mostrarCanal('${c.id}')">
+      <span class="dot-estado" id="dotEstado_${c.id}"></span>${c.nombre}
+      <span class="unread"></span>
+    </div>`).join('');
+
+  document.getElementById('paneles').innerHTML = CANALES.map((c,i) => `
+    <div class="canal-panel ${i===0?'active':''}" id="panel_${c.id}">
+      ${admin ? `
+        <div class="config-box" id="configBox_${c.id}">
+          <span class="cerrar" onclick="toggleConfigCanal('${c.id}', false)">Cerrar ✕</span>
+          <span class="badge" id="c_${c.id}_badge">no conectado</span>
+          ${c.campos.map(f => `
+            <div class="field"><label>${f.label}</label><input id="c_${c.id}_${f.k}" type="${f.k==='token'?'password':'text'}" placeholder="${f.placeholder}"></div>
+          `).join('')}
+          <button class="btn small" onclick="guardarConfig('${c.id}')">Guardar</button>
+          <div id="c_${c.id}_estado" style="font-size:11px; margin-top:6px;"></div>
+        </div>` : ''}
+      <div class="chat-shell" id="chatShell_${c.id}">
+        <div class="conv-list" id="convList_${c.id}"><div class="conv-empty">Cargando...</div></div>
+        <div class="chat-area" id="chatArea_${c.id}"><div class="chat-vacio">Elegí una conversación de la izquierda para ver los mensajes.</div></div>
+      </div>
+    </div>`).join('');
+
   for(const c of CANALES){
-    const { config, activo } = await cargarConfig(c.id);
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.setProperty('--glow-rgb', c.glow);
-    card.innerHTML = `
-      <h2>${c.nombre}</h2>
-      <span class="badge">${activo ? 'credenciales cargadas' : 'no conectado'}</span>
-      ${c.campos.map(f=>`
-        <div class="field"><label>${f.label}</label><input id="c_${c.id}_${f.k}" value="${escapeHtml(config[f.k]||'')}" placeholder="${f.placeholder}"></div>
-      `).join('')}
-      <button class="btn ghost" onclick="guardarConfig('${c.id}')">Guardar</button>
-      <div id="c_${c.id}_estado" style="font-size:11px; margin-top:4px; min-height:14px;"></div>
-      <div class="list" id="list_${c.id}"><div class="vacio">Cargando...</div></div>
-      <div class="reply">
-        <input id="input_${c.id}" placeholder="Escribí una respuesta..." onkeydown="if(event.key==='Enter') enviar('${c.id}')">
-        <button class="btn" style="width:auto;" onclick="enviar('${c.id}')">Enviar</button>
-      </div>`;
-    grid.appendChild(card);
-    cargarHistorial(c.id);
+    const { activo } = await cargarConfig(c.id);
+    const dot = document.getElementById(`dotEstado_${c.id}`);
+    if(dot) dot.classList.toggle('ok', !!activo);
+    if(admin){
+      const badge = document.getElementById(`c_${c.id}_badge`);
+      if(badge) badge.textContent = activo ? 'conectado' : 'no conectado';
+    }
+    await cargarHistorial(c.id);
   }
 
   sb.channel('mensajes-en-vivo')
-    .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload=>{
-      pintarMensaje(payload.new.canal, payload.new);
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload => {
+      const m = payload.new;
+      agregarMensajeAConversacion(m.canal, m);
+      renderListaConversaciones(m.canal);
+      if(conversacionAbierta[m.canal] === m.de){
+        const msgsCont = document.getElementById(`chatMsgs_${m.canal}`);
+        pintarBurbuja(msgsCont, m);
+        if(msgsCont) msgsCont.scrollTop = msgsCont.scrollHeight;
+        if(m.direccion === 'entrante'){
+          conversaciones[m.canal][m.de].noLeidos = 0;
+          sb.from('mensajes').update({ leido:true }).eq('id', m.id).then(()=>{});
+          renderListaConversaciones(m.canal);
+        }
+      }
     })
-    .subscribe(status=>{
-      const el = document.getElementById('estado');
-      el.textContent = status === 'SUBSCRIBED' ? 'Conectado en vivo ✓' : ('Estado: '+status);
-      el.style.color = status === 'SUBSCRIBED' ? 'var(--green)' : 'var(--txt3)';
+    .subscribe(status => {
+      const el = document.getElementById('estadoConexion');
+      if(el){
+        el.textContent = status === 'SUBSCRIBED' ? 'En vivo ✓' : 'Conectando...';
+        el.style.color = status === 'SUBSCRIBED' ? 'var(--green)' : 'var(--txt3)';
+      }
     });
 }
-
-render();
 </script>
 </body>
 </html>
