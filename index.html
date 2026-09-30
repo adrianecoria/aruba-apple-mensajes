@@ -253,8 +253,8 @@ async function guardarAcceso(rol){
 
 /* ---------- CONFIG POR CANAL (solo admin) ---------- */
 async function cargarConfig(id){
-  const { data } = await sb.from('canales_config').select('config,activo').eq('canal', id).maybeSingle();
-  return data || { config:{}, activo:false };
+  const { data } = await sb.from('canales_estado').select('activo').eq('canal', id).maybeSingle();
+  return { config:{}, activo: !!(data && data.activo) };
 }
 async function guardarConfig(id){
   if(!esAdmin()) return;
