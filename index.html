@@ -102,6 +102,15 @@ input{font-family:inherit;}
 .reply-box input:focus{border-color:var(--pink2);}
 .reply-box button{width:auto; padding:10px 18px; border-radius:10px; white-space:nowrap;}
 
+.user-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:13px;}
+.user-row .quien{min-width:0;}
+.user-row .quien small{display:block; color:var(--txt3); font-size:11px; margin-top:1px;}
+select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:9px 10px; outline:none; font-family:inherit;}
+.chat-asig{font-size:11px; color:var(--txt2); white-space:nowrap; text-align:right; flex-shrink:0;}
+.chat-asig a{color:var(--pink2); cursor:pointer; margin-left:6px;}
+.chat-bloqueado{padding:18px; text-align:center; color:var(--txt3); font-size:13px; border-top:1px solid var(--card-b); flex-shrink:0;}
+.asig-tag{font-size:10.5px; color:var(--txt3); margin-top:2px;}
+
 .back-btn{display:none; color:var(--pink2); font-size:13px;}
 @media (max-width:760px){
   .chat-shell{margin:0 10px 10px;}
@@ -142,15 +151,21 @@ input{font-family:inherit;}
 
   <div id="accesosBox" class="config-box" style="margin:0 20px; display:none;">
     <span class="cerrar" onclick="toggleAccesosBox()">Cerrar ✕</span>
-    <div class="badge">Acceso de administrador y de agente</div>
-    <div class="field"><label>Usuario administrador</label><input id="accUsuAdmin" placeholder="admin"></div>
-    <div class="field"><label>Nueva contraseña administrador (opcional)</label><input id="accClaveAdmin" type="text" placeholder="Dejar vacío para no cambiarla"></div>
-    <button class="btn small" onclick="guardarAcceso('admin')">Actualizar administrador</button>
-    <div id="acc_admin_estado" style="font-size:11px; margin:6px 0 14px;"></div>
-    <div class="field"><label>Usuario agente (la persona que solo responde mensajes)</label><input id="accUsuAgente" placeholder="agente"></div>
-    <div class="field"><label>Nueva contraseña agente (opcional)</label><input id="accClaveAgente" type="text" placeholder="Dejar vacío para no cambiarla"></div>
-    <button class="btn small" onclick="guardarAcceso('agente')">Actualizar agente</button>
-    <div id="acc_agente_estado" style="font-size:11px; margin-top:6px;"></div>
+    <div class="badge">Personas con acceso</div>
+    <div id="listaUsuarios" style="margin-bottom:16px;"></div>
+    <div style="border-top:1px solid var(--card-b); padding-top:14px;">
+      <div class="field"><label>Nombre</label><input id="nuevoNombre" placeholder="Ej: Juan Pérez"></div>
+      <div class="field"><label>Usuario (para iniciar sesión)</label><input id="nuevoUsuario" placeholder="Ej: juan"></div>
+      <div class="field"><label>Contraseña</label><input id="nuevoClave" type="text" placeholder="Contraseña"></div>
+      <div class="field"><label>Rol</label>
+        <select id="nuevoRol">
+          <option value="agente">Agente (solo responde mensajes)</option>
+          <option value="admin">Administrador (acceso total)</option>
+        </select>
+      </div>
+      <button class="btn small" onclick="agregarUsuario()">Agregar persona</button>
+      <div id="nuevoUsuarioEstado" style="font-size:11px; margin-top:6px;"></div>
+    </div>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -183,8 +198,11 @@ const CANALES = [
 let sesionActual = null;
 let conversaciones = {};
 let conversacionAbierta = {};
+let asignaciones = {};
+let usuariosCache = [];
 
 function esAdmin(){ return sesionActual && sesionActual.rol === 'admin'; }
+function claveAsig(canal, de){ return canal + ':' + de; }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function iniciales(nombre, de){
   const base = (nombre || de || '?').trim();
@@ -209,11 +227,11 @@ async function intentarLogin(){
   err.textContent = '';
   if(!u || !p){ err.textContent = 'Completá usuario y contraseña.'; return; }
   try{
-    const { data, error } = await sb.from('mensajeria_accesos').select('rol,usuario,clave');
+    const { data, error } = await sb.from('mensajeria_usuarios').select('nombre,usuario,clave,rol');
     if(error) throw error;
     const match = (data||[]).find(r => r.usuario === u && r.clave === p);
     if(!match){ err.textContent = 'Usuario o contraseña incorrectos.'; return; }
-    sesionActual = { rol: match.rol, nombre: match.rol==='admin' ? 'Administrador' : 'Agente de mensajes' };
+    sesionActual = { rol: match.rol, nombre: match.nombre, usuario: match.usuario };
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('sesionNombre').textContent = sesionActual.nombre;
@@ -230,25 +248,84 @@ function cerrarSesion(){ location.reload(); }
 
 /* ---------- GESTIÓN DE ACCESOS (solo admin) ---------- */
 function toggleAccesosBox(){
-  document.getElementById('accesosBox').classList.toggle('open');
+  const box = document.getElementById('accesosBox');
+  const abrir = !box.classList.contains('open');
+  box.classList.toggle('open', abrir);
+  if(abrir) cargarUsuarios();
 }
-async function guardarAcceso(rol){
+async function cargarUsuarios(){
+  const { data, error } = await sb.from('mensajeria_usuarios').select('id,nombre,usuario,rol').order('rol', { ascending:false }).order('nombre');
+  if(error){ console.error(error); return; }
+  usuariosCache = data || [];
+  renderUsuariosList();
+}
+function renderUsuariosList(){
+  const cont = document.getElementById('listaUsuarios');
+  if(!cont) return;
+  if(!usuariosCache.length){ cont.innerHTML = '<div class="conv-empty">Sin usuarios todavía.</div>'; return; }
+  cont.innerHTML = usuariosCache.map(u => `
+    <div class="user-row">
+      <div class="quien">${escapeHtml(u.nombre)}<small>${escapeHtml(u.usuario)} · ${u.rol==='admin' ? 'Administrador' : 'Agente'}</small></div>
+      <button class="btn ghost small" onclick="borrarUsuario('${u.id}','${escapeHtml(u.nombre)}')">Borrar</button>
+    </div>`).join('');
+}
+async function agregarUsuario(){
   if(!esAdmin()) return;
-  const usuario = document.getElementById(rol==='admin'?'accUsuAdmin':'accUsuAgente').value.trim();
-  const clave = document.getElementById(rol==='admin'?'accClaveAdmin':'accClaveAgente').value;
-  const estado = document.getElementById(`acc_${rol}_estado`);
-  if(!usuario){ estado.textContent = 'El usuario no puede quedar vacío.'; estado.style.color = 'var(--red)'; return; }
+  const nombre = document.getElementById('nuevoNombre').value.trim();
+  const usuario = document.getElementById('nuevoUsuario').value.trim();
+  const clave = document.getElementById('nuevoClave').value;
+  const rol = document.getElementById('nuevoRol').value;
+  const estado = document.getElementById('nuevoUsuarioEstado');
+  if(!nombre || !usuario || !clave){ estado.textContent = 'Completá nombre, usuario y contraseña.'; estado.style.color = 'var(--red)'; return; }
   estado.textContent = 'Guardando...'; estado.style.color = 'var(--txt3)';
   try{
-    const patch = { usuario };
-    if(clave) patch.clave = clave;
-    const { error } = await sb.from('mensajeria_accesos').update(patch).eq('rol', rol);
+    const { error } = await sb.from('mensajeria_usuarios').insert({ nombre, usuario, clave, rol });
     if(error) throw error;
-    estado.textContent = 'Actualizado ✓'; estado.style.color = 'var(--green)';
-    document.getElementById(rol==='admin'?'accClaveAdmin':'accClaveAgente').value = '';
+    estado.textContent = 'Agregado ✓'; estado.style.color = 'var(--green)';
+    document.getElementById('nuevoNombre').value = '';
+    document.getElementById('nuevoUsuario').value = '';
+    document.getElementById('nuevoClave').value = '';
+    cargarUsuarios();
   }catch(e){
-    estado.textContent = 'Error: ' + (e.message||e); estado.style.color = 'var(--red)';
+    estado.textContent = e.message && e.message.includes('duplicate') ? 'Ese usuario ya existe.' : 'Error: ' + (e.message||e);
+    estado.style.color = 'var(--red)';
   }
+}
+async function borrarUsuario(id, nombre){
+  if(!esAdmin()) return;
+  if(!confirm(`¿Borrar el acceso de ${nombre}?`)) return;
+  await sb.from('mensajeria_usuarios').delete().eq('id', id);
+  cargarUsuarios();
+}
+
+/* ---------- ASIGNACIÓN DE CONVERSACIONES A AGENTES ---------- */
+async function cargarAsignaciones(){
+  const { data, error } = await sb.from('conversaciones_asignadas').select('*');
+  asignaciones = {};
+  if(!error){ (data||[]).forEach(a => { asignaciones[claveAsig(a.canal, a.de)] = a; }); }
+}
+async function reclamarConversacion(canalId, de){
+  const key = claveAsig(canalId, de);
+  if(asignaciones[key]) return asignaciones[key].agente_usuario === sesionActual.usuario;
+  const { error } = await sb.from('conversaciones_asignadas').insert({
+    canal: canalId, de, agente_usuario: sesionActual.usuario, agente_nombre: sesionActual.nombre
+  });
+  if(error){
+    const { data } = await sb.from('conversaciones_asignadas').select('*').eq('canal', canalId).eq('de', de).maybeSingle();
+    if(data) asignaciones[key] = data;
+    return !!data && data.agente_usuario === sesionActual.usuario;
+  }
+  asignaciones[key] = { canal: canalId, de, agente_usuario: sesionActual.usuario, agente_nombre: sesionActual.nombre };
+  return true;
+}
+async function liberarConversacion(canalId, deCodificado){
+  if(!esAdmin()) return;
+  const de = decodeURIComponent(deCodificado);
+  if(!confirm('¿Liberar esta conversación para que cualquier agente la pueda atender?')) return;
+  await sb.from('conversaciones_asignadas').delete().eq('canal', canalId).eq('de', de);
+  delete asignaciones[claveAsig(canalId, de)];
+  renderListaConversaciones(canalId);
+  renderChatAbierto(canalId);
 }
 
 /* ---------- CONFIG POR CANAL (solo admin) ---------- */
@@ -311,19 +388,29 @@ function agregarMensajeAConversacion(canalId, m){
 function renderListaConversaciones(canalId){
   const cont = document.getElementById(`convList_${canalId}`);
   if(!cont) return;
-  const convs = Object.values(conversaciones[canalId] || {}).sort((a,b) => new Date(b.ultimoTime||0) - new Date(a.ultimoTime||0));
+  let convs = Object.values(conversaciones[canalId] || {}).sort((a,b) => new Date(b.ultimoTime||0) - new Date(a.ultimoTime||0));
+  if(!esAdmin()){
+    convs = convs.filter(c => {
+      const asig = asignaciones[claveAsig(canalId, c.de)];
+      return !asig || asig.agente_usuario === sesionActual.usuario;
+    });
+  }
   actualizarBadgeTab(canalId, convs.reduce((s,c) => s + c.noLeidos, 0));
   if(!convs.length){ cont.innerHTML = '<div class="conv-empty">Todavía no hay conversaciones.<br>Cuando alguien te escriba, va a aparecer acá.</div>'; return; }
-  cont.innerHTML = convs.map(c => `
+  cont.innerHTML = convs.map(c => {
+    const asig = asignaciones[claveAsig(canalId, c.de)];
+    const tag = esAdmin() ? `<div class="asig-tag">${asig ? '👤 ' + escapeHtml(asig.agente_nombre) : 'Sin asignar'}</div>` : '';
+    return `
     <div class="conv-item ${conversacionAbierta[canalId]===c.de?'active':''}" onclick="abrirConversacion('${canalId}','${encodeURIComponent(c.de)}')">
       <div class="conv-avatar">${iniciales(c.nombre, c.de)}</div>
       <div class="conv-info">
         <div class="nombre"><span>${escapeHtml(c.nombre || c.de)}</span><span class="hora">${fmtHoraLista(c.ultimoTime)}</span></div>
         <div class="preview">${c.ultimoDireccion==='saliente' ? 'Vos: ' : ''}${escapeHtml(c.ultimoTexto||'')}</div>
+        ${tag}
       </div>
       ${c.noLeidos>0 ? `<div class="conv-unread">${c.noLeidos}</div>` : ''}
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function actualizarBadgeTab(canalId, total){
@@ -361,17 +448,25 @@ function renderChatAbierto(canalId){
     return;
   }
   const conv = conversaciones[canalId][de];
+  const asig = asignaciones[claveAsig(canalId, de)];
+  const bloqueadoParaMi = !esAdmin() && asig && asig.agente_usuario !== sesionActual.usuario;
+  const asigInfo = esAdmin()
+    ? `<div class="chat-asig">${asig ? `Atiende <b>${escapeHtml(asig.agente_nombre)}</b><a onclick="liberarConversacion('${canalId}','${encodeURIComponent(de)}')">Liberar</a>` : 'Sin asignar'}</div>`
+    : (asig && !bloqueadoParaMi ? `<div class="chat-asig">Lo estás atendiendo vos</div>` : '');
   area.innerHTML = `
     <div class="chat-header">
       <span class="back-btn" onclick="volverALista('${canalId}')">‹ Volver</span>
       <div class="conv-avatar">${iniciales(conv.nombre, conv.de)}</div>
-      <div><div class="nombre">${escapeHtml(conv.nombre || conv.de)}</div><div class="idcontacto">${escapeHtml(conv.de)}</div></div>
+      <div style="flex:1; min-width:0;"><div class="nombre">${escapeHtml(conv.nombre || conv.de)}</div><div class="idcontacto">${escapeHtml(conv.de)}</div></div>
+      ${asigInfo}
     </div>
     <div class="chat-messages" id="chatMsgs_${canalId}"></div>
-    <div class="reply-box">
-      <input id="chatInput_${canalId}" placeholder="Escribí una respuesta..." onkeydown="if(event.key==='Enter') enviarDesdeChat('${canalId}')">
-      <button class="btn" onclick="enviarDesdeChat('${canalId}')">Enviar</button>
-    </div>`;
+    ${bloqueadoParaMi
+      ? `<div class="chat-bloqueado">Esta conversación ya está siendo atendida por ${escapeHtml(asig.agente_nombre)}.</div>`
+      : `<div class="reply-box">
+          <input id="chatInput_${canalId}" placeholder="Escribí una respuesta..." onkeydown="if(event.key==='Enter') enviarDesdeChat('${canalId}')">
+          <button class="btn" onclick="enviarDesdeChat('${canalId}')">Enviar</button>
+        </div>`}`;
   const msgsCont = document.getElementById(`chatMsgs_${canalId}`);
   conv.mensajes.forEach(m => pintarBurbuja(msgsCont, m));
   msgsCont.scrollTop = msgsCont.scrollHeight;
@@ -391,6 +486,17 @@ async function enviarDesdeChat(canalId){
   const de = conversacionAbierta[canalId];
   if(!texto || !de) return;
   input.disabled = true;
+
+  if(!esAdmin()){
+    const puedo = await reclamarConversacion(canalId, de);
+    if(!puedo){
+      renderChatAbierto(canalId);
+      renderListaConversaciones(canalId);
+      return;
+    }
+    renderListaConversaciones(canalId);
+  }
+
   try{
     const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:canalId, destinatario:de, texto } });
     if(error || (data && data.error)) throw new Error((data && data.error) || error.message);
@@ -443,6 +549,8 @@ async function iniciarApp(){
       </div>
     </div>`).join('');
 
+  await cargarAsignaciones();
+
   for(const c of CANALES){
     const { activo } = await cargarConfig(c.id);
     const dot = document.getElementById(`dotEstado_${c.id}`);
@@ -453,6 +561,22 @@ async function iniciarApp(){
     }
     await cargarHistorial(c.id);
   }
+
+  sb.channel('asignaciones-en-vivo')
+    .on('postgres_changes', { event:'*', schema:'public', table:'conversaciones_asignadas' }, payload => {
+      if(payload.eventType === 'DELETE'){
+        const old = payload.old;
+        delete asignaciones[claveAsig(old.canal, old.de)];
+      } else {
+        const row = payload.new;
+        asignaciones[claveAsig(row.canal, row.de)] = row;
+      }
+      CANALES.forEach(c => renderListaConversaciones(c.id));
+      Object.keys(conversacionAbierta).forEach(canalId => {
+        if(conversacionAbierta[canalId]) renderChatAbierto(canalId);
+      });
+    })
+    .subscribe();
 
   sb.channel('mensajes-en-vivo')
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload => {
