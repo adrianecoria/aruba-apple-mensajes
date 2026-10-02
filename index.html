@@ -597,7 +597,8 @@ async function enviarDesdeChat(canalId){
 
   try{
     const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:canalId, destinatario:de, texto } });
-    if(error || (data && data.error)) throw new Error((data && data.error) || error.message);
+    if(error) throw new Error(error.message || 'Error de conexión');
+    if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
     input.value = '';
   }catch(e){
     const msgsCont = document.getElementById(`chatMsgs_${canalId}`);
