@@ -29,23 +29,118 @@ button{font-family:inherit; cursor:pointer;}
 input{font-family:inherit;}
 
 #loginOverlay{position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;
-  background:var(--bg); background-image:
-    radial-gradient(700px 500px at -5% -10%, rgba(255,45,168,0.35), transparent 60%),
-    radial-gradient(700px 500px at 105% 110%, rgba(130,30,220,0.30), transparent 60%);}
-.login-card{width:360px; max-width:100%; background:var(--card); border:2px solid var(--card-b); border-radius:18px; padding:30px;}
-.login-brand{display:flex; align-items:center; gap:10px; margin-bottom:22px; justify-content:center;}
-.login-brand .dot{width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); box-shadow:0 0 14px var(--pink2);}
-.login-brand span{font-family:'Manrope'; font-weight:800; font-size:19px;}
-.login-card h2{font-size:16px; margin-bottom:4px; text-align:center;}
-.login-sub{color:var(--txt2); font-size:12.5px; margin-bottom:20px; text-align:center;}
-.field{margin-bottom:12px;}
-.field label{display:block; font-size:11.5px; color:var(--txt3); margin-bottom:4px;}
-.field input{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:9px 10px; outline:none;}
-.field input:focus{border-color:var(--pink2);}
-.btn{background:linear-gradient(135deg,var(--grad1),var(--grad2)); border:none; color:#fff; padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600; width:100%;}
-.btn.ghost{background:transparent; border:1px solid var(--card-b); color:var(--txt2);}
+  background:var(--bg); overflow:hidden;}
+#loginOverlay::before{
+  content:''; position:absolute; width:600px; height:600px; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(255,47,176,0.30) 0%, rgba(178,59,240,0.20) 40%, transparent 70%);
+  animation:loginGlowPulse 4s ease-in-out infinite; pointer-events:none; z-index:0;
+}
+#loginOverlay::after{
+  content:''; position:absolute; width:400px; height:400px; top:50%; left:50%; transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(255,111,198,0.18) 0%, transparent 60%);
+  animation:loginGlowPulse2 3s ease-in-out infinite 1s; pointer-events:none; z-index:0;
+}
+@keyframes loginGlowPulse{
+  0%,100%{ opacity:0.5; transform:translate(-50%,-50%) scale(0.9); }
+  50%{ opacity:1; transform:translate(-50%,-50%) scale(1.15); }
+}
+@keyframes loginGlowPulse2{
+  0%,100%{ opacity:0.3; transform:translate(-50%,-50%) scale(1); }
+  50%{ opacity:0.7; transform:translate(-50%,-50%) scale(1.1); }
+}
+#loginOverlay .login-orb{
+  position:absolute; border-radius:50%; pointer-events:none; z-index:0; filter:blur(60px);
+}
+#loginOverlay .login-orb.orb1{
+  width:300px; height:300px; top:-10%; left:-8%;
+  background:rgba(255,47,176,0.25); animation:orbFloat1 8s ease-in-out infinite;
+}
+#loginOverlay .login-orb.orb2{
+  width:250px; height:250px; bottom:-8%; right:-6%;
+  background:rgba(178,59,240,0.25); animation:orbFloat2 10s ease-in-out infinite;
+}
+#loginOverlay .login-orb.orb3{
+  width:180px; height:180px; top:20%; right:15%;
+  background:rgba(255,111,198,0.15); animation:orbFloat3 7s ease-in-out infinite;
+}
+@keyframes orbFloat1{
+  0%,100%{ transform:translate(0,0); } 50%{ transform:translate(40px,30px); }
+}
+@keyframes orbFloat2{
+  0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-30px,-40px); }
+}
+@keyframes orbFloat3{
+  0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-20px,20px) scale(1.15); }
+}
+.login-card{
+  width:400px; max-width:100%; position:relative; z-index:1;
+  background:rgba(18,10,28,0.75); backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border:1px solid rgba(255,111,198,0.25); border-radius:24px; padding:40px 36px;
+  box-shadow:
+    0 0 80px rgba(255,47,176,0.15),
+    0 0 40px rgba(178,59,240,0.10),
+    0 25px 60px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  animation:cardEntrance 0.6s cubic-bezier(0.16,1,0.3,1) forwards, cardGlow 3s ease-in-out infinite 0.6s;
+}
+@keyframes cardEntrance{
+  0%{ opacity:0; transform:translateY(30px) scale(0.96); }
+  100%{ opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes cardGlow{
+  0%,100%{ box-shadow:0 0 60px rgba(255,47,176,0.12), 0 0 30px rgba(178,59,240,0.08), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); border-color:rgba(255,111,198,0.20); }
+  50%{ box-shadow:0 0 100px rgba(255,47,176,0.25), 0 0 50px rgba(178,59,240,0.18), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color:rgba(255,111,198,0.45); }
+}
+.login-brand{display:flex; align-items:center; gap:12px; margin-bottom:28px; justify-content:center;}
+.login-brand .dot{
+  width:14px; height:14px; border-radius:50%;
+  background:linear-gradient(135deg,var(--grad1),var(--grad2));
+  box-shadow:0 0 18px var(--pink2), 0 0 6px var(--grad1);
+  animation:dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse{
+  0%,100%{ box-shadow:0 0 14px var(--pink2), 0 0 4px var(--grad1); transform:scale(1); }
+  50%{ box-shadow:0 0 24px var(--pink2), 0 0 10px var(--grad1); transform:scale(1.1); }
+}
+.login-brand span{font-family:'Manrope'; font-weight:800; font-size:22px; letter-spacing:-0.3px;}
+.login-card h2{font-size:22px; font-weight:800; margin-bottom:6px; text-align:center;
+  background:linear-gradient(135deg, #fff 30%, var(--pink2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.login-sub{color:var(--txt2); font-size:13.5px; margin-bottom:28px; text-align:center; line-height:1.5;}
+.field{margin-bottom:16px;}
+.field label{display:block; font-size:12px; color:var(--txt2); margin-bottom:7px; letter-spacing:0.3px; text-transform:uppercase; font-weight:600;}
+.field input{width:100%; padding:12px 14px; font-size:14px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px;
+  color:var(--txt); font-family:'Inter'; transition:all 0.3s ease; outline:none;
+}
+.field input::placeholder{color:var(--txt3);}
+.field input:focus{
+  border-color:var(--pink2); background:rgba(255,255,255,0.09);
+  box-shadow:0 0 0 4px rgba(255,47,176,0.12), 0 0 20px rgba(255,47,176,0.08);
+}
+.btn{
+  width:100%; padding:14px; border:none; border-radius:14px; font-size:15px; font-weight:700;
+  font-family:'Manrope'; color:#fff; cursor:pointer; position:relative; overflow:hidden;
+  background:linear-gradient(135deg,var(--grad1),var(--grad2));
+  box-shadow:0 4px 20px rgba(255,47,176,0.30);
+  transition:all 0.3s ease; margin-top:6px;
+}
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 30px rgba(255,47,176,0.45), 0 0 20px rgba(255,47,176,0.2);
+}
+.btn:active{transform:translateY(0); box-shadow:0 2px 12px rgba(255,47,176,0.25);}
+.btn::after{
+  content:''; position:absolute; top:0; left:-80%; width:50%; height:100%;
+  background:linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform:skewX(-20deg); transition:left 0.6s ease;
+}
+.btn:hover::after{left:130%;}
+.btn.ghost{background:transparent; border:1px solid var(--card-b); color:var(--txt2); box-shadow:none;}
+.btn.ghost:hover{transform:none; box-shadow:none; border-color:var(--pink2);}
+.btn.ghost::after{display:none;}
 .btn.small{padding:7px 12px; font-size:12px; width:auto;}
-#loginError{color:var(--red); font-size:12px; margin-top:10px; text-align:center; min-height:16px;}
+#loginError{color:var(--red); font-size:12.5px; margin-top:14px; text-align:center; min-height:16px;}
 
 #app{display:none; flex-direction:column; height:100vh; width:100%;}
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; flex-wrap:wrap; gap:8px;}
@@ -126,12 +221,15 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 <body>
 
 <div id="loginOverlay">
+  <div class="login-orb orb1"></div>
+  <div class="login-orb orb2"></div>
+  <div class="login-orb orb3"></div>
   <div class="login-card">
     <div class="login-brand"><span class="dot"></span><span>Aruba Apple</span></div>
     <h2>Mensajes</h2>
     <div class="login-sub">Ingresá tu usuario y contraseña para continuar.</div>
-    <div class="field"><label>Usuario</label><input id="loginUsuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
-    <div class="field"><label>Contraseña</label><input id="loginClave" type="password" onkeydown="if(event.key==='Enter') intentarLogin()"></div>
+    <div class="field"><label>Usuario</label><input id="loginUsuario" placeholder="Tu usuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
+    <div class="field"><label>Contraseña</label><input id="loginClave" type="password" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter') intentarLogin()"></div>
     <button class="btn" onclick="intentarLogin()">Ingresar</button>
     <div id="loginError"></div>
   </div>
