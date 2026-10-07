@@ -137,9 +137,13 @@ input{font-family:inherit;}
 .conv-search input:focus{border-color:var(--pink2);}
 .conv-search input::placeholder{color:var(--txt3);}
 .conv-items{flex:1; overflow-y:auto;}
-.conv-item{display:flex; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; align-items:center;}
+.conv-item{display:flex; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; align-items:center; transition:box-shadow 0.3s; border-radius:10px; margin:4px 6px;}
 .conv-item:hover{background:rgba(255,255,255,0.03);}
 .conv-item.active{background:rgba(255,45,168,0.12);}
+/* Resplandor por canal */
+.conv-item.canal-instagram{box-shadow:0 0 14px 2px rgba(255,120,30,0.35), 0 0 32px 6px rgba(255,80,0,0.10);}
+.conv-item.canal-messenger{box-shadow:0 0 14px 2px rgba(50,130,255,0.35), 0 0 32px 6px rgba(30,100,255,0.10);}
+.conv-item.canal-whatsapp{box-shadow:0 0 14px 2px rgba(37,211,102,0.35), 0 0 32px 6px rgba(30,180,80,0.10);}
 .conv-avatar-wrap{position:relative; flex-shrink:0;}
 .conv-avatar{width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0;}
 .conv-avatar-wrap .plat-icon{position:absolute; bottom:-2px; right:-4px; width:18px; height:18px; border-radius:5px; border:2px solid var(--bg); font-size:9px;}
@@ -179,14 +183,10 @@ input{font-family:inherit;}
 .chat-header .nombre{font-size:14px; font-weight:700;}
 .chat-header .idcontacto{font-size:11px; color:var(--txt3); display:flex; align-items:center; gap:6px;}
 .chat-messages{flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:8px;}
-.msg{max-width:72%; padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.4; word-wrap:break-word; transition:box-shadow 0.3s;}
+.msg{max-width:72%; padding:9px 13px; border-radius:14px; font-size:13.5px; line-height:1.4; word-wrap:break-word;}
 .msg.in{background:rgba(255,255,255,0.08); align-self:flex-start; border-bottom-left-radius:4px;}
 .msg.out{background:linear-gradient(135deg,var(--grad1),var(--grad2)); color:#fff; align-self:flex-end; border-bottom-right-radius:4px;}
 .msg .hora{font-size:10px; opacity:0.65; margin-top:4px; text-align:right;}
-/* Resplandor por canal */
-.msg.canal-instagram{box-shadow:0 0 12px 2px rgba(255,120,30,0.35), 0 0 30px 4px rgba(255,80,0,0.12);}
-.msg.canal-messenger{box-shadow:0 0 12px 2px rgba(50,130,255,0.35), 0 0 30px 4px rgba(30,100,255,0.12);}
-.msg.canal-whatsapp{box-shadow:0 0 12px 2px rgba(37,211,102,0.35), 0 0 30px 4px rgba(30,180,80,0.12);}
 .chat-vacio{margin:auto; color:var(--txt3); font-size:13px; text-align:center; padding:30px;}
 .reply-box{display:flex; gap:8px; padding:14px; border-top:1px solid var(--card-b); flex-shrink:0; flex-wrap:wrap;}
 .reply-box input{flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:10px; color:var(--txt); font-size:13.5px; padding:10px 14px; outline:none; min-width:0;}
@@ -694,7 +694,7 @@ function renderListaUnificada(){
     }
     const hasUnread = c.noLeidos > 0;
     return `
-    <div class="conv-item ${esActiva(c)?'active':''} ${hasUnread?'has-unread':''}" onclick="abrirConversacion('${c.canal}','${encodeURIComponent(c.de)}')">
+    <div class="conv-item canal-${c.canal} ${esActiva(c)?'active':''} ${hasUnread?'has-unread':''}" onclick="abrirConversacion('${c.canal}','${encodeURIComponent(c.de)}')">
       <div class="conv-avatar-wrap">
         <div class="conv-avatar">${iniciales(c.nombre, c.de)}</div>
         ${platIcon(c.canal)}
@@ -821,8 +821,7 @@ function renderChatAbierto(){
 function pintarBurbuja(cont, m){
   if(!cont) return;
   const div = document.createElement('div');
-  const canalClass = conversacionAbierta ? 'canal-' + conversacionAbierta.canal : '';
-  div.className = 'msg ' + (m.direccion === 'entrante' ? 'in' : 'out') + ' ' + canalClass;
+  div.className = 'msg ' + (m.direccion === 'entrante' ? 'in' : 'out');
   div.innerHTML = `${escapeHtml(m.texto)}<div class="hora">${fmtHora(m.creado_en)}</div>`;
   cont.appendChild(div);
 }
