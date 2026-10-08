@@ -177,6 +177,13 @@ input{font-family:inherit;}
 .btn-indeciso:hover{background:rgba(255,230,0,0.18); border-color:#ffe600; box-shadow:0 0 12px rgba(255,230,0,0.3);}
 .chat-status-btns{display:flex; gap:6px; margin-left:auto; flex-shrink:0;}
 
+/* Barra de Nº de venta */
+.venta-bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 16px; border-bottom:1px solid var(--card-b); background:rgba(0,255,100,0.06); flex-shrink:0;}
+.venta-bar-nro{font-size:13px; color:var(--txt); letter-spacing:0.5px;}
+.venta-bar-nro b{font-family:'Manrope'; font-size:16px; color:#00ff64; letter-spacing:2px; text-shadow:0 0 8px rgba(0,255,100,0.4);}
+.btn-enviar-nro{padding:7px 14px; font-size:12px; font-weight:600; border:1px solid rgba(0,255,100,0.4); background:rgba(0,255,100,0.1); color:#00ff64; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
+.btn-enviar-nro:hover{background:rgba(0,255,100,0.2); border-color:#00ff64; box-shadow:0 0 12px rgba(0,255,100,0.3);}
+
 .chat-area{flex:1; display:flex; flex-direction:column; min-width:0;}
 .chat-header{padding:14px 18px; border-bottom:1px solid var(--card-b); display:flex; align-items:center; gap:10px; flex-shrink:0;}
 .chat-header .conv-avatar-wrap .conv-avatar{width:34px; height:34px; font-size:12px;}
@@ -265,6 +272,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
     <div class="brand"><span class="dot"></span><h1>Mensajes · Aruba Apple</h1></div>
     <div class="topbar-right">
       <span id="estadoConexion"></span>
+      <span id="cupoAgente" style="display:none;"></span>
       <span>Sesión: <b id="sesionNombre">-</b></span>
       <a id="linkConfigAdmin" onclick="toggleConfigGlobal()" style="display:none;">Configurar canales</a>
       <a id="linkAccesos" onclick="toggleAccesosBox()" style="display:none;">Gestionar accesos</a>
@@ -342,6 +350,8 @@ let asignaciones = {};
 let usuariosCache = [];
 let filtroActual = 'todos';
 let canalesEstado = {};
+let ventasMensajes = [];            // reservas generadas al cerrar ventas (compartidas con el CRM)
+const LIMITE_CONV_ACTIVAS = 3;      // máximo de clientes que un agente atiende al mismo tiempo
 
 function esAdmin(){ return sesionActual && sesionActual.rol === 'admin'; }
 function claveAsig(canal, de){ return canal + ':' + de; }
@@ -369,6 +379,26 @@ function platTag(canalId){
   return `<span class="plat-tag ${canalId}">${PLAT_SVG[canalId]||''} ${c?.nombre||canalId}</span>`;
 }
 
+/* ---------- PRIVACIDAD DE CONTACTO ----------
+   Los agentes NO ven el identificador del contacto (teléfono de WhatsApp,
+   usuario de Instagram/Messenger) ni el nombre; sólo el administrador.
+   A los agentes se les muestra una etiqueta neutra por canal + un código corto
+   y estable (derivado del identificador) para poder distinguir conversaciones. */
+function codigoCliente(de){
+  let h = 0; const s = String(de||'');
+  for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+  return h.toString(36).toUpperCase().slice(-4).padStart(4,'0');
+}
+function nombreMostrado(conv){
+  if(esAdmin()) return conv.nombre || conv.de;
+  const canalNombre = CANALES.find(c=>c.id===conv.canal)?.nombre || conv.canal;
+  return `Cliente ${canalNombre} #${codigoCliente(conv.de)}`;
+}
+function inicialesMostradas(conv){
+  if(esAdmin()) return iniciales(conv.nombre, conv.de);
+  return codigoCliente(conv.de).slice(0,2);
+}
+
 /* ---------- LOGIN ---------- */
 async function intentarLogin(){
   const u = document.getElementById('loginUsuario').value.trim();
@@ -377,17 +407,30 @@ async function intentarLogin(){
   err.textContent = '';
   if(!u || !p){ err.textContent = 'Completá usuario y contraseña.'; return; }
   try{
-    const { data, error } = await sb.from('mensajeria_usuarios').select('nombre,usuario,clave,rol');
+    // Usuarios unificados con el CRM: se leen de la tabla crm_datos (mismas credenciales en ambas apps)
+    const { data, error } = await sb.from('crm_datos').select('clave,valor').in('clave', ['usuarios','admin_cred']);
     if(error) throw error;
-    const match = (data||[]).find(r => r.usuario === u && r.clave === p);
-    if(!match){ err.textContent = 'Usuario o contraseña incorrectos.'; return; }
-    sesionActual = { rol: match.rol, nombre: match.nombre, usuario: match.usuario };
+    const mapa = {};
+    (data||[]).forEach(row => mapa[row.clave] = row.valor);
+    const adminCred = mapa.admin_cred || { usuario:'admin', clave:'admin' };
+    const vendedores = Array.isArray(mapa.usuarios) ? mapa.usuarios : [];
+
+    let sesion = null;
+    if(u === adminCred.usuario && p === adminCred.clave){
+      sesion = { rol:'admin', nombre:'Administrador', usuario:u, vendedorId:null };
+    } else {
+      const vend = vendedores.find(x => x.usuario && x.usuario === u && x.clave === p);
+      if(vend) sesion = { rol:'agente', nombre:(vend.nombre + ' ' + (vend.apellido||'')).trim(), usuario:vend.usuario, vendedorId:vend.id };
+    }
+    if(!sesion){ err.textContent = 'Usuario o contraseña incorrectos.'; return; }
+
+    sesionActual = sesion;
     document.getElementById('loginOverlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('sesionNombre').textContent = sesionActual.nombre;
     if(esAdmin()){
       document.getElementById('linkConfigAdmin').style.display = 'inline';
-      document.getElementById('linkAccesos').style.display = 'inline';
+      // Los accesos ahora se administran desde el CRM (sección Usuarios)
     }
     iniciarApp();
   }catch(e){
@@ -487,6 +530,35 @@ async function liberarConversacion(canalId, deCodificado){
   renderChatAbierto();
 }
 
+/* ---------- LÍMITE DE CLIENTES SIMULTÁNEOS POR AGENTE ---------- */
+// Una conversación "ocupa un cupo" mientras esté asignada al agente y todavía
+// no esté resuelta. Se libera al marcarla como "venta", "indeciso" o "cerrada".
+function estadoOcupaCupo(estado){
+  return estado !== 'venta' && estado !== 'indeciso' && estado !== 'cerrada';
+}
+function misConversacionesActivas(){
+  if(!sesionActual) return [];
+  const out = [];
+  for(const key in asignaciones){
+    const a = asignaciones[key];
+    if(a.agente_usuario !== sesionActual.usuario) continue;
+    if(!estadoOcupaCupo(a.estado)) continue;
+    out.push(a);
+  }
+  return out;
+}
+function actualizarCupoAgente(){
+  const cupoEl = document.getElementById('cupoAgente');
+  if(!cupoEl) return;
+  if(!esAdmin() && sesionActual){
+    const n = misConversacionesActivas().length;
+    cupoEl.style.display = 'inline';
+    cupoEl.innerHTML = `Atendiendo <b style="color:${n>=LIMITE_CONV_ACTIVAS?'var(--amber)':'var(--green)'}">${n}/${LIMITE_CONV_ACTIVAS}</b>`;
+  } else {
+    cupoEl.style.display = 'none';
+  }
+}
+
 /* ---------- CERRAR / REABRIR CONVERSACIÓN ---------- */
 async function actualizarEstadoDB(canalId, de, estado){
   await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de);
@@ -508,13 +580,70 @@ async function reabrirConv(canalId, deCodificado){
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'activa');
 }
+function generarNroVenta(existentes){
+  const usados = new Set((existentes||[]).map(r => r.nro_venta));
+  let nro, intentos = 0;
+  do{
+    nro = String(Math.floor(Math.random()*9999)+1).padStart(4,'0'); // 0001–9999, no correlativo
+    intentos++;
+  } while(usados.has(nro) && intentos < 100);
+  return nro;
+}
+
 async function marcarVenta(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
-  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; }
+
+  // Generar un Nº de venta sólo si la conversación todavía no tiene uno
+  let nro = conv?.nroVenta || null;
+  if(!nro){
+    // Traer la lista actual desde la nube para no repetir números
+    try{
+      const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_mensajes').maybeSingle();
+      if(data && Array.isArray(data.valor)) ventasMensajes = data.valor;
+    }catch(e){ /* seguimos con lo que tengamos en memoria */ }
+    nro = generarNroVenta(ventasMensajes);
+    ventasMensajes.push({
+      nro_venta: nro,
+      canal: canalId,
+      de,
+      cliente: (conv && conv.nombre) ? conv.nombre : de,
+      agente: (sesionActual && (sesionActual.nombre || sesionActual.usuario)) || '',
+      vendedor_id: (sesionActual && sesionActual.vendedorId) || null,
+      fecha: new Date().toISOString().slice(0,10),
+      estado: 'reservado',
+      creado_en: new Date().toISOString()
+    });
+    try{
+      await sb.from('crm_datos').upsert({ clave:'ventas_mensajes', valor: ventasMensajes, actualizado_en: new Date().toISOString() });
+    }catch(e){ console.error('No se pudo registrar la venta para el CRM', e); }
+  }
+
+  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; conv.nroVenta = nro; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'venta');
 }
+async function enviarNroVentaCliente(canalId, deCodificado){
+  const de = decodeURIComponent(deCodificado);
+  const conv = conversaciones[canalId]?.[de];
+  if(!conv || !conv.nroVenta){ alert('Esta conversación todavía no tiene un número de venta.'); return; }
+  const texto = `✅ ¡Gracias por tu compra en Aruba Apple!\n\n` +
+    `Tu número de venta es *${conv.nroVenta}*.\n` +
+    `Mostralo en el local para retirar tu equipo. ¡Te esperamos!`;
+  if(!esAdmin()){
+    const puedo = await reclamarConversacion(canalId, de);
+    if(!puedo){ renderChatAbierto(); renderListaUnificada(); return; }
+  }
+  try{
+    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:canalId, destinatario:de, texto } });
+    if(error) throw new Error(error.message || 'Error');
+    if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
+    alert('Número de venta enviado al cliente ✓');
+  }catch(e){
+    alert('No se pudo enviar el número de venta: ' + (e.message||e));
+  }
+}
+
 async function marcarIndeciso(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
@@ -680,7 +809,7 @@ function renderListaUnificada(){
     const cerrada = c.cerrada;
     let tag = '';
     const ev = c.estadoVenta;
-    const estadoListaTag = ev === 'venta' ? '<span class="conv-estado-tag venta">💰 Venta</span>'
+    const estadoListaTag = ev === 'venta' ? `<span class="conv-estado-tag venta">💰 Venta${c.nroVenta?(' #'+c.nroVenta):''}</span>`
       : ev === 'indeciso' ? '<span class="conv-estado-tag indeciso">⏳ Indeciso</span>'
       : cerrada ? '<span class="conv-estado-tag cerrada">Cerrada</span>'
       : '';
@@ -696,21 +825,44 @@ function renderListaUnificada(){
     return `
     <div class="conv-item canal-${c.canal} ${esActiva(c)?'active':''} ${hasUnread?'has-unread':''}" onclick="abrirConversacion('${c.canal}','${encodeURIComponent(c.de)}')">
       <div class="conv-avatar-wrap">
-        <div class="conv-avatar">${iniciales(c.nombre, c.de)}</div>
+        <div class="conv-avatar">${inicialesMostradas(c)}</div>
         ${platIcon(c.canal)}
       </div>
       <div class="conv-info">
-        <div class="nombre"><span>${escapeHtml(c.nombre || c.de)}</span><span class="hora">${fmtHoraLista(c.ultimoTime)}</span></div>
+        <div class="nombre"><span>${escapeHtml(nombreMostrado(c))}</span><span class="hora">${fmtHoraLista(c.ultimoTime)}</span></div>
         <div class="preview">${c.ultimoDireccion==='saliente' ? 'Vos: ' : ''}${escapeHtml(c.ultimoTexto||'')}</div>
         ${tag}
       </div>
       ${hasUnread ? `<div class="conv-unread">${c.noLeidos}</div>` : ''}
     </div>`;
   }).join('');
+
+  actualizarCupoAgente();
 }
 
 async function abrirConversacion(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
+
+  // Límite de clientes simultáneos para agentes (los administradores no tienen tope)
+  if(!esAdmin()){
+    const asig = asignaciones[claveAsig(canalId, de)];
+    const yaEsMia = asig && asig.agente_usuario === sesionActual.usuario;
+    if(!yaEsMia){
+      if(misConversacionesActivas().length >= LIMITE_CONV_ACTIVAS){
+        alert(`Ya estás atendiendo ${LIMITE_CONV_ACTIVAS} clientes al mismo tiempo.\n\nMarcá una conversación como "Venta cerrada" o "Indeciso" (o cerrala) para poder abrir otra.`);
+        return;
+      }
+      // Al abrir un cliente nuevo, queda reclamado por este agente
+      const puedo = await reclamarConversacion(canalId, de);
+      if(!puedo){
+        renderListaUnificada();
+        alert('Esa conversación ya fue tomada por otro agente.');
+        return;
+      }
+      renderListaUnificada();
+    }
+  }
+
   conversacionAbierta = { canal: canalId, de };
   const conv = conversaciones[canalId]?.[de];
   if(conv && conv.noLeidos > 0){
@@ -781,6 +933,15 @@ function renderChatAbierto(){
     statusBtns = `<div class="chat-status-btns">${btns.join('')}</div>`;
   }
 
+  // Barra de Nº de venta (cuando la conversación está marcada como venta cerrada)
+  let ventaBar = '';
+  if(estadoConv === 'venta' && conv.nroVenta){
+    ventaBar = `<div class="venta-bar">
+      <div class="venta-bar-nro">🧾 Nº de Venta: <b>${conv.nroVenta}</b></div>
+      ${!bloqueadoParaMi ? `<button class="btn-enviar-nro" onclick="enviarNroVentaCliente('${canal}','${deEnc}')">📤 Enviar Nº al cliente</button>` : ''}
+    </div>`;
+  }
+
   let replyArea = '';
   if(bloqueadoParaMi){
     replyArea = `<div class="chat-bloqueado">Esta conversación ya está siendo atendida por ${escapeHtml(asig.agente_nombre)}.</div>`;
@@ -800,16 +961,17 @@ function renderChatAbierto(){
     <div class="chat-header">
       <span class="back-btn" onclick="volverALista()">‹ Volver</span>
       <div class="conv-avatar-wrap">
-        <div class="conv-avatar">${iniciales(conv.nombre, conv.de)}</div>
+        <div class="conv-avatar">${inicialesMostradas(conv)}</div>
         ${platIcon(canal)}
       </div>
       <div style="flex:1; min-width:0;">
-        <div class="nombre">${escapeHtml(conv.nombre || conv.de)}</div>
-        <div class="idcontacto">${platTag(canal)} ${escapeHtml(conv.de)}</div>
+        <div class="nombre">${escapeHtml(nombreMostrado(conv))}</div>
+        <div class="idcontacto">${platTag(canal)} ${esAdmin() ? escapeHtml(conv.de) : '<span style="color:var(--txt3);">🔒 Identidad protegida</span>'}</div>
       </div>
       ${asigInfo}
       ${statusBtns}
     </div>
+    ${ventaBar}
     <div class="chat-messages" id="chatMsgs"></div>
     ${replyArea}`;
 
@@ -1005,6 +1167,32 @@ async function enviarFotoEquipo(equipoId){
 }
 
 /* ---------- INICIO ---------- */
+function reaplicarEstadosAsignaciones(){
+  // Las asignaciones se cargan antes que los historiales, así que volvemos a
+  // aplicar el estado (venta/indeciso/cerrada) sobre las conversaciones ya cargadas.
+  for(const key in asignaciones){
+    const a = asignaciones[key];
+    const conv = conversaciones[a.canal]?.[a.de];
+    if(!conv || !a.estado) continue;
+    if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = true; }
+    else if(a.estado === 'indeciso'){ conv.estadoVenta = 'indeciso'; }
+    else if(a.estado === 'cerrada'){ conv.cerrada = true; conv.estadoVenta = null; }
+    else { conv.cerrada = false; conv.estadoVenta = null; }
+  }
+}
+
+async function cargarVentasMensajes(){
+  try{
+    const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_mensajes').maybeSingle();
+    ventasMensajes = (data && Array.isArray(data.valor)) ? data.valor : [];
+  }catch(e){ ventasMensajes = ventasMensajes || []; }
+  // Asociar el Nº de venta a cada conversación (el más reciente de cada cliente)
+  ventasMensajes.forEach(r => {
+    const conv = conversaciones[r.canal]?.[r.de];
+    if(conv) conv.nroVenta = r.nro_venta;
+  });
+}
+
 async function iniciarApp(){
   await cargarAsignaciones();
 
@@ -1013,6 +1201,9 @@ async function iniciarApp(){
     canalesEstado[c.id] = !!activo;
     await cargarHistorial(c.id);
   }
+
+  reaplicarEstadosAsignaciones();
+  await cargarVentasMensajes();
 
   renderFiltros();
   renderListaUnificada();
