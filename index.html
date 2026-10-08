@@ -580,9 +580,19 @@ function actualizarCupoAgente(){
 
 /* ---------- CERRAR / REABRIR CONVERSACIÓN ---------- */
 async function actualizarEstadoDB(canalId, de, estado){
-  await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de);
   const key = claveAsig(canalId, de);
-  if(asignaciones[key]) asignaciones[key].estado = estado;
+  if(!asignaciones[key]){
+    // No había asignación (p.ej. un admin gestionando una conversación sin asignar): la creamos
+    const fila = { canal:canalId, de, estado,
+      agente_usuario: (sesionActual && sesionActual.usuario) || 'admin',
+      agente_nombre: (sesionActual && sesionActual.nombre) || 'Administrador' };
+    const { error } = await sb.from('conversaciones_asignadas').insert(fila);
+    if(error){ await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de); }
+    asignaciones[key] = fila;
+    return;
+  }
+  await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de);
+  asignaciones[key].estado = estado;
 }
 async function cerrarConv(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
@@ -1033,7 +1043,7 @@ function renderChatAbierto(){
 
   const deEnc = encodeURIComponent(de);
   let statusBtns = '';
-  if(puedeGestionar && asig){
+  if(puedeGestionar && (asig || esAdmin())){
     let btns = [];
     if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
