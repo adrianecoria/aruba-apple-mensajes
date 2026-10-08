@@ -1193,6 +1193,50 @@ async function cargarVentasMensajes(){
   });
 }
 
+/* ---------- AGENDA AUTOMÁTICA DE CLIENTES DE WHATSAPP EN EL CRM ----------
+   Cada número de WhatsApp que escribe se agenda en el CRM (sección Clientes)
+   como "Cliente 1", "Cliente 2", etc., con el teléfono. No se duplican. */
+function uid(){ return 'wa'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function soloDigitos(s){ return String(s||'').replace(/\D/g,''); }
+let _syncClientesEnCurso = false;
+
+async function agendarClientesWhatsapp(){
+  if(_syncClientesEnCurso) return;
+  const waConvs = conversaciones['whatsapp'] ? Object.keys(conversaciones['whatsapp']) : [];
+  if(!waConvs.length) return;
+  _syncClientesEnCurso = true;
+  try{
+    // Traer lo último de clientes desde la nube para no pisar cambios del CRM
+    let clientesCRM = [];
+    const { data } = await sb.from('crm_datos').select('valor').eq('clave','clientes').maybeSingle();
+    clientesCRM = (data && Array.isArray(data.valor)) ? data.valor : [];
+
+    const telsExistentes = new Set(clientesCRM.map(c => soloDigitos(c.telefono)).filter(Boolean));
+    let maxNum = clientesCRM.reduce((mx,c)=>{
+      if(c.nombre==='Cliente' && /^\d+$/.test(String(c.apellido||''))) return Math.max(mx, parseInt(c.apellido,10));
+      return mx;
+    }, 0);
+
+    let agregados = 0;
+    waConvs.forEach(de => {
+      const tel = soloDigitos(de);
+      if(!tel || telsExistentes.has(tel)) return; // ya agendado (por el CRM o automáticamente)
+      maxNum++;
+      clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:de, direccion:'' });
+      telsExistentes.add(tel);
+      agregados++;
+    });
+
+    if(agregados > 0){
+      await sb.from('crm_datos').upsert({ clave:'clientes', valor: clientesCRM, actualizado_en: new Date().toISOString() });
+    }
+  }catch(e){
+    console.error('No se pudieron agendar clientes de WhatsApp en el CRM', e);
+  }finally{
+    _syncClientesEnCurso = false;
+  }
+}
+
 async function iniciarApp(){
   await cargarAsignaciones();
 
@@ -1204,6 +1248,7 @@ async function iniciarApp(){
 
   reaplicarEstadosAsignaciones();
   await cargarVentasMensajes();
+  await agendarClientesWhatsapp();
 
   renderFiltros();
   renderListaUnificada();
@@ -1228,6 +1273,7 @@ async function iniciarApp(){
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload => {
       const m = payload.new;
       agregarMensajeAConversacion(m.canal, m);
+      if(m.canal === 'whatsapp' && m.direccion === 'entrante') agendarClientesWhatsapp();
       renderListaUnificada();
       if(conversacionAbierta && conversacionAbierta.canal === m.canal && conversacionAbierta.de === m.de){
         const msgsCont = document.getElementById('chatMsgs');
