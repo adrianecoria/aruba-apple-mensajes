@@ -183,6 +183,25 @@ input{font-family:inherit;}
 .venta-bar-nro b{font-family:'Manrope'; font-size:16px; color:#00ff64; letter-spacing:2px; text-shadow:0 0 8px rgba(0,255,100,0.4);}
 .btn-enviar-nro{padding:7px 14px; font-size:12px; font-weight:600; border:1px solid rgba(0,255,100,0.4); background:rgba(0,255,100,0.1); color:#00ff64; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
 .btn-enviar-nro:hover{background:rgba(0,255,100,0.2); border-color:#00ff64; box-shadow:0 0 12px rgba(0,255,100,0.3);}
+.venta-bar-eq{font-size:12px; color:var(--pink2); font-weight:600; margin-left:4px;}
+
+/* Selector de equipo al cerrar venta */
+.sel-overlay{position:fixed; inset:0; z-index:10000; background:rgba(8,4,14,0.75); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:20px;}
+.sel-card{width:520px; max-width:100%; max-height:80vh; display:flex; flex-direction:column; background:rgba(18,10,28,0.98); border:1px solid rgba(255,111,198,0.25); border-radius:18px; box-shadow:0 25px 60px rgba(0,0,0,0.5); overflow:hidden;}
+.sel-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--card-b);}
+.sel-head h3{font-family:'Manrope'; font-size:16px; font-weight:800;}
+.sel-close{background:none; border:none; color:var(--txt3); font-size:18px; cursor:pointer; padding:4px 8px;}
+.sel-search{margin:12px 16px; padding:10px 14px; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:10px; color:var(--txt); font-size:13px; outline:none;}
+.sel-search:focus{border-color:var(--pink2);}
+.sel-list{flex:1; overflow-y:auto; padding:0 16px 8px;}
+.sel-item{display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);}
+.sel-item-info{flex:1; min-width:0;}
+.sel-item-modelo{font-family:'Manrope'; font-weight:700; font-size:13.5px;}
+.sel-item-det{font-size:11.5px; color:var(--txt2); margin-top:2px;}
+.sel-item-precio{display:flex; align-items:center; gap:3px; color:var(--green); font-weight:600;}
+.sel-precio-input{width:80px; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:7px 9px; outline:none;}
+.sel-precio-input:focus{border-color:var(--pink2);}
+.sel-foot{padding:12px 16px; border-top:1px solid var(--card-b); text-align:center;}
 
 .chat-area{flex:1; display:flex; flex-direction:column; min-width:0;}
 .chat-header{padding:14px 18px; border-bottom:1px solid var(--card-b); display:flex; align-items:center; gap:10px; flex-shrink:0;}
@@ -590,7 +609,21 @@ function generarNroVenta(existentes){
   return nro;
 }
 
-async function marcarVenta(canalId, deCodificado){
+// Cambia el estado de un equipo en el stock del CRM (disponible / reservado / vendido)
+async function marcarEquipoEstado(equipoId, nuevoEstado){
+  if(!equipoId) return;
+  try{
+    const { data } = await sb.from('crm_datos').select('valor').eq('clave','stock_equipos').maybeSingle();
+    const equipos = (data && Array.isArray(data.valor)) ? data.valor : [];
+    const e = equipos.find(x => x.id === equipoId);
+    if(e){
+      e.estado = nuevoEstado;
+      await sb.from('crm_datos').upsert({ clave:'stock_equipos', valor: equipos, actualizado_en: new Date().toISOString() });
+    }
+  }catch(err){ console.error('No se pudo actualizar el stock del equipo', err); }
+}
+
+async function marcarVenta(canalId, deCodificado, equipo){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
 
@@ -610,6 +643,13 @@ async function marcarVenta(canalId, deCodificado){
       cliente: (conv && conv.nombre) ? conv.nombre : de,
       agente: (sesionActual && (sesionActual.nombre || sesionActual.usuario)) || '',
       vendedor_id: (sesionActual && sesionActual.vendedorId) || null,
+      // Equipo vendido (si se eligió uno)
+      equipo_id: equipo ? equipo.id : null,
+      modelo: equipo ? equipo.modelo : null,
+      color: equipo ? (equipo.color || '') : null,
+      imei: equipo ? (equipo.imei || '') : null,
+      precio: equipo && equipo.precio!=null && equipo.precio!=='' ? Number(equipo.precio) : null,
+      compra: equipo && equipo.compra!=null && equipo.compra!=='' ? Number(equipo.compra) : null,
       fecha: new Date().toISOString().slice(0,10),
       estado: 'reservado',
       creado_en: new Date().toISOString()
@@ -617,12 +657,82 @@ async function marcarVenta(canalId, deCodificado){
     try{
       await sb.from('crm_datos').upsert({ clave:'ventas_mensajes', valor: ventasMensajes, actualizado_en: new Date().toISOString() });
     }catch(e){ console.error('No se pudo registrar la venta para el CRM', e); }
+    // Reservar el equipo en el stock para que no se venda dos veces
+    if(equipo && equipo.id) await marcarEquipoEstado(equipo.id, 'reservado');
   }
 
-  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; conv.nroVenta = nro; }
+  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; conv.nroVenta = nro; if(equipo) conv.equipoVendido = equipo.modelo; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'venta');
 }
+/* ---------- SELECTOR DE EQUIPO AL CERRAR VENTA ---------- */
+let _ventaCtx = null;        // { canal, deEnc }
+let _selectorEquipos = [];
+
+async function abrirSelectorEquipoVenta(canalId, deCodificado){
+  _ventaCtx = { canal: canalId, deEnc: deCodificado };
+  let overlay = document.getElementById('selectorEquipoOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'selectorEquipoOverlay';
+    overlay.className = 'sel-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `<div class="sel-card">
+      <div class="sel-head"><h3>¿Qué equipo vendiste?</h3><button class="sel-close" onclick="cerrarSelectorEquipo()">✕</button></div>
+      <input class="sel-search" id="selEquipoBuscar" placeholder="Buscar modelo..." oninput="renderSelectorEquipo(this.value)">
+      <div class="sel-list" id="selEquipoLista"><div class="catalogo-empty">Cargando equipos...</div></div>
+      <div class="sel-foot"><button class="btn ghost small" onclick="confirmarVentaSinEquipo()">Cerrar venta sin especificar equipo</button></div>
+    </div>`;
+  _selectorEquipos = await cargarCatalogo();
+  renderSelectorEquipo('');
+}
+
+function renderSelectorEquipo(filtro){
+  const cont = document.getElementById('selEquipoLista');
+  if(!cont) return;
+  const q = (filtro||'').toLowerCase();
+  const lista = _selectorEquipos.filter(e => !q || (e.modelo+' '+(e.color||'')+' '+(e.imei||'')).toLowerCase().includes(q));
+  if(!lista.length){ cont.innerHTML = '<div class="catalogo-empty">No hay equipos disponibles en el stock.</div>'; return; }
+  cont.innerHTML = lista.map(e=>{
+    const precio = e.sugerido ? Number(e.sugerido) : '';
+    return `<div class="sel-item">
+      <div class="sel-item-info">
+        <div class="sel-item-modelo">${escapeHtml(e.modelo||'-')}</div>
+        <div class="sel-item-det">${escapeHtml(e.color||'-')} · 🔋 ${escapeHtml(String(e.bateria||'-'))}%${e.imei?(' · IMEI '+escapeHtml(e.imei)):''}</div>
+      </div>
+      <div class="sel-item-precio"><span>$</span><input type="number" class="sel-precio-input" id="selPrecio_${e.id}" value="${precio}" placeholder="Precio"></div>
+      <button class="btn-venta" onclick="confirmarVentaConEquipo('${e.id}')">Vender</button>
+    </div>`;
+  }).join('');
+}
+
+function confirmarVentaConEquipo(equipoId){
+  const e = _selectorEquipos.find(x=>x.id===equipoId);
+  if(!e || !_ventaCtx) return;
+  const precioInput = document.getElementById('selPrecio_'+equipoId);
+  const precio = precioInput ? precioInput.value : (e.sugerido||'');
+  const equipo = { id:e.id, modelo:e.modelo, color:e.color, imei:e.imei, precio:precio, compra:e.compra };
+  const ctx = _ventaCtx;
+  cerrarSelectorEquipo();
+  marcarVenta(ctx.canal, ctx.deEnc, equipo);
+}
+
+function confirmarVentaSinEquipo(){
+  if(!_ventaCtx) return;
+  if(!confirm('¿Cerrar la venta sin especificar el equipo? Quedará registrada solo como "Venta por Mensajes".')) return;
+  const ctx = _ventaCtx;
+  cerrarSelectorEquipo();
+  marcarVenta(ctx.canal, ctx.deEnc, null);
+}
+
+function cerrarSelectorEquipo(){
+  const overlay = document.getElementById('selectorEquipoOverlay');
+  if(overlay) overlay.style.display = 'none';
+  _ventaCtx = null;
+}
+
 async function enviarNroVentaCliente(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
@@ -925,7 +1035,7 @@ function renderChatAbierto(){
   let statusBtns = '';
   if(puedeGestionar && asig){
     let btns = [];
-    if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="marcarVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
+    if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
     if(!estaCerrada) btns.push(`<button class="btn-cerrar-conv" onclick="cerrarConv('${canal}','${deEnc}')">Cerrar</button>`);
     if(estaCerrada) btns.push(`<button class="btn btn-sm" onclick="reabrirConv('${canal}','${deEnc}')">Reabrir</button>`);
@@ -937,7 +1047,7 @@ function renderChatAbierto(){
   let ventaBar = '';
   if(estadoConv === 'venta' && conv.nroVenta){
     ventaBar = `<div class="venta-bar">
-      <div class="venta-bar-nro">🧾 Nº de Venta: <b>${conv.nroVenta}</b></div>
+      <div class="venta-bar-nro">🧾 Nº de Venta: <b>${conv.nroVenta}</b>${conv.equipoVendido ? ` <span class="venta-bar-eq">📱 ${escapeHtml(conv.equipoVendido)}</span>` : ''}</div>
       ${!bloqueadoParaMi ? `<button class="btn-enviar-nro" onclick="enviarNroVentaCliente('${canal}','${deEnc}')">📤 Enviar Nº al cliente</button>` : ''}
     </div>`;
   }
@@ -1189,7 +1299,7 @@ async function cargarVentasMensajes(){
   // Asociar el Nº de venta a cada conversación (el más reciente de cada cliente)
   ventasMensajes.forEach(r => {
     const conv = conversaciones[r.canal]?.[r.de];
-    if(conv) conv.nroVenta = r.nro_venta;
+    if(conv){ conv.nroVenta = r.nro_venta; if(r.modelo) conv.equipoVendido = r.modelo; }
   });
 }
 
