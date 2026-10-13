@@ -111,6 +111,11 @@ input{font-family:inherit;}
 .dolar-bar .dolar-calc input:focus{border-color:var(--pink2);}
 .dolar-bar .dolar-calc .calc-result{color:#00ff64; font-family:'Manrope'; font-weight:700; font-size:13px; min-width:90px;}
 .dolar-bar .dolar-update{font-size:10px; color:var(--txt3);}
+.dolar-bar .dolar-refresh{background:none; border:1px solid var(--card-b); border-radius:6px; color:var(--txt3); cursor:pointer; padding:3px 7px; font-size:12px; display:flex; align-items:center; gap:4px; transition:all .2s;}
+.dolar-bar .dolar-refresh:hover{border-color:#00ff64; color:#00ff64;}
+.dolar-bar .dolar-refresh.loading{pointer-events:none; opacity:.5;}
+.dolar-bar .dolar-refresh.loading svg{animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* ===== FILTROS ===== */
 .filtros{display:flex; gap:8px; padding:10px 20px; flex-shrink:0; overflow-x:auto; align-items:center;}
@@ -324,6 +329,9 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
       <span class="calc-result" id="dolarResultARS">$0</span>
     </div>
     <span class="dolar-update" id="dolarUpdate"></span>
+    <button class="dolar-refresh" id="dolarRefreshBtn" onclick="refreshDolar()" title="Actualizar cotización">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+    </button>
   </div>
 
   <div id="accesosBox" class="config-box" style="margin:0 20px;">
@@ -1412,6 +1420,13 @@ async function fetchDolarBlue(){
     const el = document.getElementById('dolarVenta');
     if(el) el.textContent = 'Error';
   }
+}
+
+async function refreshDolar(){
+  const btn = document.getElementById('dolarRefreshBtn');
+  if(btn) btn.classList.add('loading');
+  await fetchDolarBlue();
+  if(btn) btn.classList.remove('loading');
 }
 
 function calcularARS(){
