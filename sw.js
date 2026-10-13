@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aruba-mensajes-v3';
+const CACHE_NAME = 'aruba-mensajes-v4';
 const PRECACHE = [
   './',
   './index.html',

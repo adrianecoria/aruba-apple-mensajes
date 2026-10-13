@@ -282,26 +282,26 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 @media (max-width:760px), (display-mode:standalone){
   /* === PWA MOBILE — ESTILO WHATSAPP === */
   body{background:#111b21; background-image:none;}
-  #app{height:100vh; height:100dvh;}
+  #app{height:100vh; height:100dvh; padding-top:env(safe-area-inset-top, 0px);}
 
   /* Topbar compacta */
-  .topbar{padding:12px 16px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.08);}
-  .topbar h1{font-size:18px;}
-  .topbar-right{gap:10px; font-size:13px;}
-  .topbar-right a,.topbar-right span{font-size:13px;}
+  .topbar{padding:14px 16px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .topbar h1{font-size:20px;}
+  .topbar-right{gap:10px; font-size:14px; flex-wrap:wrap;}
+  .topbar-right a,.topbar-right span{font-size:14px;}
 
   /* Dolar bar compacta */
-  .dolar-bar{padding:7px 14px; gap:10px; background:rgba(0,80,40,0.15); border-bottom:1px solid rgba(255,255,255,0.06); min-height:36px;}
-  .dolar-bar .dolar-cotiz{gap:6px; font-size:13px;}
-  .dolar-bar .dolar-cotiz b{font-size:14px;}
-  .dolar-bar .dolar-calc{gap:5px; font-size:13px;}
-  .dolar-bar .dolar-calc input{width:65px; font-size:13px; padding:4px 8px;}
-  .dolar-bar .dolar-calc .calc-result{font-size:14px; min-width:75px;}
-  .dolar-bar .dolar-update{font-size:11px;}
+  .dolar-bar{padding:9px 16px; gap:10px; background:rgba(0,80,40,0.15); border-bottom:1px solid rgba(255,255,255,0.06); min-height:40px;}
+  .dolar-bar .dolar-cotiz{gap:6px; font-size:15px;}
+  .dolar-bar .dolar-cotiz b{font-size:16px;}
+  .dolar-bar .dolar-calc{gap:5px; font-size:15px;}
+  .dolar-bar .dolar-calc input{width:70px; font-size:15px; padding:5px 8px;}
+  .dolar-bar .dolar-calc .calc-result{font-size:16px; min-width:80px;}
+  .dolar-bar .dolar-update{font-size:12px;}
 
   /* Filtros scrollables */
-  .filtros{padding:9px 12px; gap:7px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06);}
-  .filtro-btn{padding:7px 14px; font-size:13.5px; border-radius:18px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);}
+  .filtros{padding:10px 14px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06);}
+  .filtro-btn{padding:8px 16px; font-size:15px; border-radius:20px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);}
   .filtro-btn.active{background:#00a884; border-color:#00a884; color:#fff;}
 
   /* Chat shell fullscreen */
@@ -313,44 +313,44 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
   /* Conversaciones lista — estilo WhatsApp */
   .conv-search{padding:8px 10px; background:#111b21;}
-  .conv-search input{border-radius:20px; padding:10px 16px; background:rgba(255,255,255,0.08); border-color:transparent; font-size:15px;}
-  .conv-item{padding:12px 14px; margin:0; border-radius:0; border-bottom:1px solid rgba(255,255,255,0.06); box-shadow:none !important;}
+  .conv-search input{border-radius:20px; padding:11px 16px; background:rgba(255,255,255,0.08); border-color:transparent; font-size:16px;}
+  .conv-item{padding:14px 16px; margin:0; border-radius:0; border-bottom:1px solid rgba(255,255,255,0.06); box-shadow:none !important;}
   .conv-item:hover{background:rgba(255,255,255,0.04);}
   .conv-item.active{background:rgba(0,168,132,0.15);}
-  .conv-avatar{width:48px; height:48px; font-size:17px; background:#2a3942;}
-  .conv-info .nombre{font-size:16px;}
-  .conv-info .preview{font-size:14px; color:rgba(255,255,255,0.55);}
-  .conv-unread{background:#00a884; color:#fff; font-weight:700;}
+  .conv-avatar{width:50px; height:50px; font-size:18px; background:#2a3942;}
+  .conv-info .nombre{font-size:17px;}
+  .conv-info .preview{font-size:15px; color:rgba(255,255,255,0.55);}
+  .conv-unread{background:#00a884; color:#fff; font-weight:700; font-size:13px;}
 
   /* Back button visible */
   .back-btn{display:inline-flex; color:#00a884; font-size:22px; font-weight:700; padding:0 4px;}
 
   /* Chat header compacto */
-  .chat-header{padding:12px 14px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; flex-wrap:wrap;}
-  .chat-header .nombre{font-size:16px;}
-  .chat-header .idcontacto{font-size:12px;}
-  .chat-asig{font-size:12px; width:100%; text-align:left; margin-top:4px;}
+  .chat-header{padding:14px 16px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; flex-wrap:wrap;}
+  .chat-header .nombre{font-size:18px;}
+  .chat-header .idcontacto{font-size:13px;}
+  .chat-asig{font-size:13px; width:100%; text-align:left; margin-top:4px;}
   .chat-status-btns{width:100%; margin-top:6px; margin-left:0; overflow-x:auto; flex-wrap:nowrap;}
-  .chat-status-btns button{font-size:12px; padding:6px 12px; white-space:nowrap;}
+  .chat-status-btns button{font-size:13px; padding:7px 14px; white-space:nowrap;}
 
   /* Burbujas estilo WhatsApp */
   .chat-messages{padding:10px 12px; gap:4px;
     background:#0b141a url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 12 L25 15Z' fill='rgba(255,255,255,0.012)'/%3E%3C/svg%3E");
   }
-  .msg{max-width:85%; padding:8px 12px; border-radius:8px; font-size:15.5px; line-height:1.4; position:relative; box-shadow:0 1px 1px rgba(0,0,0,0.15);}
+  .msg{max-width:85%; padding:9px 13px; border-radius:8px; font-size:16px; line-height:1.45; position:relative; box-shadow:0 1px 1px rgba(0,0,0,0.15);}
   .msg.in{background:#1a2a35; color:#e9edef; border-top-left-radius:0; border-bottom-left-radius:8px; align-self:flex-start;}
   .msg.out{background:#005c4b; color:#e9edef; border-top-right-radius:0; border-bottom-right-radius:8px; align-self:flex-end; background-image:none;}
-  .msg .hora{font-size:11.5px; opacity:0.5; margin-top:2px;}
+  .msg .hora{font-size:12px; opacity:0.5; margin-top:2px;}
 
   /* Reply box estilo WhatsApp */
-  .reply-box{padding:8px 10px; background:#1f2c33; border-top:none; gap:6px; flex-wrap:nowrap; align-items:center;}
-  .reply-box input{border-radius:20px; padding:11px 16px; font-size:16px; background:rgba(255,255,255,0.08); border-color:transparent;}
+  .reply-box{padding:10px 12px; background:#1f2c33; border-top:none; gap:8px; flex-wrap:nowrap; align-items:center;}
+  .reply-box input{border-radius:20px; padding:12px 16px; font-size:16px; background:rgba(255,255,255,0.08); border-color:transparent;}
   .reply-box input:focus{border-color:#00a884;}
-  .reply-box .btn{width:40px; height:40px; min-width:40px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#00a884; box-shadow:none; font-size:16px;}
+  .reply-box .btn{width:44px; height:44px; min-width:44px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#00a884; box-shadow:none; font-size:18px;}
   .reply-box .btn:hover{background:#00bd96; transform:none; box-shadow:none;}
   .reply-box .btn::after{display:none;}
   .reply-box .plat-send-indicator{display:none;}
-  .btn-catalogo{padding:9px 12px; font-size:13px; border-radius:20px;}
+  .btn-catalogo{padding:10px 14px; font-size:14px; border-radius:20px;}
 
   /* Catálogo mobile */
   .catalogo-panel{bottom:56px; border-radius:16px 16px 0 0; max-height:60vh;}
@@ -363,7 +363,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   .venta-bar{padding:10px 14px; font-size:14px; gap:8px;}
   .venta-bar-nro{font-size:14px;}
   .venta-bar-nro b{font-size:16px;}
-  .btn-enviar-nro{padding:7px 12px; font-size:13px;}
+  .btn-enviar-nro{padding:8px 14px; font-size:14px;}
 
   /* Config y accesos mobile */
   .config-box{margin:0 8px 10px; border-radius:12px; padding:12px;}
@@ -380,9 +380,12 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   .chat-bloqueado{font-size:14px; padding:14px; background:#1f2c33;}
 
   /* Login mobile */
-  .login-card{padding:28px 24px; border-radius:20px;}
-  .login-brand span{font-size:19px;}
-  .login-card h2{font-size:20px;}
+  .login-card{padding:32px 28px; border-radius:20px;}
+  .login-brand span{font-size:22px;}
+  .login-card h2{font-size:24px;}
+  .login-card .field label{font-size:14px;}
+  .login-card input{font-size:16px; padding:12px 14px;}
+  .login-card .btn{font-size:16px; padding:14px;}
 }
 </style>
 </head>
