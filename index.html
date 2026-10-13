@@ -2,8 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mensajes · Aruba Apple</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0710">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mensajes">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -275,14 +280,109 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
 .back-btn{display:none; color:var(--pink2); font-size:13px; cursor:pointer;}
 @media (max-width:760px){
-  .chat-shell{margin:0 10px 10px;}
-  .conv-list{width:100%; border-right:none;}
-  .chat-area{position:absolute; inset:0; background:#120a17; display:none; border-radius:16px;}
+  /* === PWA MOBILE — ESTILO WHATSAPP === */
+  body{background:#111b21; background-image:none;}
+  #app{height:100vh; height:100dvh;}
+
+  /* Topbar compacta */
+  .topbar{padding:10px 14px; gap:6px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .topbar h1{font-size:15px;}
+  .topbar-right{gap:8px; font-size:11px;}
+  .topbar-right a,.topbar-right span{font-size:11px;}
+
+  /* Dolar bar compacta */
+  .dolar-bar{padding:5px 12px; gap:10px; background:rgba(0,80,40,0.15); border-bottom:1px solid rgba(255,255,255,0.06); min-height:32px;}
+  .dolar-bar .dolar-cotiz{gap:6px; font-size:11px;}
+  .dolar-bar .dolar-cotiz b{font-size:12px;}
+  .dolar-bar .dolar-calc{gap:4px; font-size:11px;}
+  .dolar-bar .dolar-calc input{width:60px; font-size:11px; padding:3px 6px;}
+  .dolar-bar .dolar-calc .calc-result{font-size:12px; min-width:70px;}
+  .dolar-bar .dolar-update{font-size:9px;}
+
+  /* Filtros scrollables */
+  .filtros{padding:8px 10px; gap:6px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06);}
+  .filtro-btn{padding:5px 12px; font-size:11.5px; border-radius:18px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);}
+  .filtro-btn.active{background:#00a884; border-color:#00a884; color:#fff;}
+
+  /* Chat shell fullscreen */
+  .chat-shell{margin:0; border:none; border-radius:0; background:#0b141a;}
+  .conv-list{width:100%; border-right:none; background:#111b21;}
+  .chat-area{position:absolute; inset:0; background:#0b141a; display:none; border-radius:0; z-index:10;}
   .chat-shell.chat-open .conv-list{display:none;}
   .chat-shell.chat-open .chat-area{display:flex;}
-  .back-btn{display:inline-flex;}
-  .config-box{margin:0 10px 14px;}
-  .filtros{padding:10px;}
+
+  /* Conversaciones lista — estilo WhatsApp */
+  .conv-search{padding:8px 10px; background:#111b21;}
+  .conv-search input{border-radius:20px; padding:8px 14px; background:rgba(255,255,255,0.08); border-color:transparent; font-size:13px;}
+  .conv-item{padding:10px 12px; margin:0; border-radius:0; border-bottom:1px solid rgba(255,255,255,0.06); box-shadow:none !important;}
+  .conv-item:hover{background:rgba(255,255,255,0.04);}
+  .conv-item.active{background:rgba(0,168,132,0.15);}
+  .conv-avatar{width:44px; height:44px; font-size:15px; background:#2a3942;}
+  .conv-info .nombre{font-size:14px;}
+  .conv-info .preview{font-size:12.5px; color:rgba(255,255,255,0.55);}
+  .conv-unread{background:#00a884; color:#fff; font-weight:700;}
+
+  /* Back button visible */
+  .back-btn{display:inline-flex; color:#00a884; font-size:22px; font-weight:700; padding:0 4px;}
+
+  /* Chat header compacto */
+  .chat-header{padding:10px 12px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; flex-wrap:wrap;}
+  .chat-header .nombre{font-size:14px;}
+  .chat-header .idcontacto{font-size:10px;}
+  .chat-asig{font-size:10px; width:100%; text-align:left; margin-top:4px;}
+  .chat-status-btns{width:100%; margin-top:6px; margin-left:0; overflow-x:auto; flex-wrap:nowrap;}
+  .chat-status-btns button{font-size:10px; padding:5px 10px; white-space:nowrap;}
+
+  /* Burbujas estilo WhatsApp */
+  .chat-messages{padding:10px 12px; gap:4px;
+    background:#0b141a url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 12 L25 15Z' fill='rgba(255,255,255,0.012)'/%3E%3C/svg%3E");
+  }
+  .msg{max-width:85%; padding:7px 10px; border-radius:8px; font-size:13.5px; line-height:1.35; position:relative; box-shadow:0 1px 1px rgba(0,0,0,0.15);}
+  .msg.in{background:#1a2a35; color:#e9edef; border-top-left-radius:0; border-bottom-left-radius:8px; align-self:flex-start;}
+  .msg.out{background:#005c4b; color:#e9edef; border-top-right-radius:0; border-bottom-right-radius:8px; align-self:flex-end; background-image:none;}
+  .msg .hora{font-size:10px; opacity:0.5; margin-top:2px;}
+
+  /* Reply box estilo WhatsApp */
+  .reply-box{padding:8px 10px; background:#1f2c33; border-top:none; gap:6px; flex-wrap:nowrap; align-items:center;}
+  .reply-box input{border-radius:20px; padding:9px 14px; font-size:14px; background:rgba(255,255,255,0.08); border-color:transparent;}
+  .reply-box input:focus{border-color:#00a884;}
+  .reply-box .btn{width:40px; height:40px; min-width:40px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#00a884; box-shadow:none; font-size:16px;}
+  .reply-box .btn:hover{background:#00bd96; transform:none; box-shadow:none;}
+  .reply-box .btn::after{display:none;}
+  .reply-box .plat-send-indicator{display:none;}
+  .btn-catalogo{padding:8px 10px; font-size:11px; border-radius:20px;}
+
+  /* Catálogo mobile */
+  .catalogo-panel{bottom:56px; border-radius:16px 16px 0 0; max-height:60vh;}
+  .catalogo-grid{grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; padding:10px;}
+  .cat-body{padding:8px 10px;}
+  .cat-card .cat-modelo{font-size:12px;}
+  .cat-card .cat-precio{font-size:13px;}
+
+  /* Venta bar mobile */
+  .venta-bar{padding:8px 12px; font-size:12px; gap:8px;}
+  .venta-bar-nro{font-size:12px;}
+  .venta-bar-nro b{font-size:14px;}
+  .btn-enviar-nro{padding:6px 10px; font-size:11px;}
+
+  /* Config y accesos mobile */
+  .config-box{margin:0 8px 10px; border-radius:12px; padding:12px;}
+  .config-row{flex-direction:column;}
+  .config-canal-section{min-width:100%;}
+
+  /* Selector de equipo mobile */
+  .sel-card{width:100%; max-width:100%; border-radius:16px 16px 0 0; max-height:90vh; margin-top:auto;}
+  .sel-overlay{align-items:flex-end;}
+  .sel-item{gap:8px; padding:8px 0;}
+  .sel-precio-input{width:65px; font-size:12px; padding:6px 8px;}
+
+  /* Chat bloqueado */
+  .chat-bloqueado{font-size:12px; padding:14px; background:#1f2c33;}
+
+  /* Login mobile */
+  .login-card{padding:28px 24px; border-radius:20px;}
+  .login-brand span{font-size:19px;}
+  .login-card h2{font-size:20px;}
 }
 </style>
 </head>
@@ -1518,6 +1618,15 @@ async function iniciarApp(){
         el.style.color = status === 'SUBSCRIBED' ? 'var(--green)' : 'var(--txt3)';
       }
     });
+}
+
+// === PWA: Registro del Service Worker ===
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
 }
 </script>
 </body>
