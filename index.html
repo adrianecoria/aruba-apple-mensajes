@@ -100,6 +100,18 @@ input{font-family:inherit;}
 .topbar-right a{color:var(--pink2); cursor:pointer;}
 .topbar-right a:hover{text-decoration:underline;}
 
+/* ===== BARRA DÓLAR BLUE ===== */
+.dolar-bar{display:flex; align-items:center; justify-content:center; gap:16px; padding:6px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; background:rgba(0,255,100,0.04); min-height:36px; flex-wrap:wrap;}
+.dolar-bar .dolar-cotiz{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--txt2);}
+.dolar-bar .dolar-cotiz b{color:#00ff64; font-family:'Manrope'; font-size:14px; font-weight:800; letter-spacing:0.5px; text-shadow:0 0 6px rgba(0,255,100,0.3);}
+.dolar-bar .dolar-cotiz .dolar-label{color:var(--txt3); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;}
+.dolar-bar .dolar-sep{width:1px; height:18px; background:var(--card-b);}
+.dolar-bar .dolar-calc{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--txt2);}
+.dolar-bar .dolar-calc input{width:80px; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:12.5px; padding:4px 8px; outline:none; font-family:'Inter'; text-align:right;}
+.dolar-bar .dolar-calc input:focus{border-color:var(--pink2);}
+.dolar-bar .dolar-calc .calc-result{color:#00ff64; font-family:'Manrope'; font-weight:700; font-size:13px; min-width:90px;}
+.dolar-bar .dolar-update{font-size:10px; color:var(--txt3);}
+
 /* ===== FILTROS ===== */
 .filtros{display:flex; gap:8px; padding:10px 20px; flex-shrink:0; overflow-x:auto; align-items:center;}
 .filtro-btn{padding:7px 14px; border-radius:20px; border:1px solid var(--card-b); background:rgba(255,255,255,0.03); color:var(--txt2); font-size:12.5px; font-weight:600; white-space:nowrap; display:flex; align-items:center; gap:7px; cursor:pointer; transition:all 0.2s;}
@@ -297,6 +309,21 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
       <a id="linkAccesos" onclick="toggleAccesosBox()" style="display:none;">Gestionar accesos</a>
       <a onclick="cerrarSesion()">Cerrar sesión</a>
     </div>
+  </div>
+
+  <div class="dolar-bar" id="dolarBar">
+    <div class="dolar-cotiz">
+      <span class="dolar-label">Dólar Blue Venta</span>
+      <b id="dolarVenta">–</b>
+    </div>
+    <div class="dolar-sep"></div>
+    <div class="dolar-calc">
+      <span>USD</span>
+      <input type="number" id="dolarInputUSD" placeholder="100" oninput="calcularARS()">
+      <span>→</span>
+      <span class="calc-result" id="dolarResultARS">$0</span>
+    </div>
+    <span class="dolar-update" id="dolarUpdate"></span>
   </div>
 
   <div id="accesosBox" class="config-box" style="margin:0 20px;">
@@ -580,19 +607,9 @@ function actualizarCupoAgente(){
 
 /* ---------- CERRAR / REABRIR CONVERSACIÓN ---------- */
 async function actualizarEstadoDB(canalId, de, estado){
-  const key = claveAsig(canalId, de);
-  if(!asignaciones[key]){
-    // No había asignación (p.ej. un admin gestionando una conversación sin asignar): la creamos
-    const fila = { canal:canalId, de, estado,
-      agente_usuario: (sesionActual && sesionActual.usuario) || 'admin',
-      agente_nombre: (sesionActual && sesionActual.nombre) || 'Administrador' };
-    const { error } = await sb.from('conversaciones_asignadas').insert(fila);
-    if(error){ await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de); }
-    asignaciones[key] = fila;
-    return;
-  }
   await sb.from('conversaciones_asignadas').update({ estado }).eq('canal', canalId).eq('de', de);
-  asignaciones[key].estado = estado;
+  const key = claveAsig(canalId, de);
+  if(asignaciones[key]) asignaciones[key].estado = estado;
 }
 async function cerrarConv(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
@@ -674,6 +691,15 @@ async function marcarVenta(canalId, deCodificado, equipo){
   if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; conv.nroVenta = nro; if(equipo) conv.equipoVendido = equipo.modelo; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'venta');
+
+  // Notificación push al admin
+  const clienteNombre = (conv && conv.nombre) ? conv.nombre : de;
+  const agenteNombre = sesionActual ? sesionActual.nombre : 'Desconocido';
+  const equipoTxt = equipo ? (' — ' + equipo.modelo) : '';
+  enviarNotificacionPush(
+    '💰 ¡Venta Cerrada!',
+    `${agenteNombre} cerró una venta con ${clienteNombre}${equipoTxt} (Nº ${nro})`
+  );
 }
 /* ---------- SELECTOR DE EQUIPO AL CERRAR VENTA ---------- */
 let _ventaCtx = null;        // { canal, deEnc }
@@ -770,6 +796,14 @@ async function marcarIndeciso(canalId, deCodificado){
   if(conv) conv.estadoVenta = 'indeciso';
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'indeciso');
+
+  // Notificación push al admin
+  const clienteNombreInd = (conv && conv.nombre) ? conv.nombre : de;
+  const agenteNombreInd = sesionActual ? sesionActual.nombre : 'Desconocido';
+  enviarNotificacionPush(
+    '⏳ Cliente Indeciso',
+    `${agenteNombreInd} marcó como indeciso a ${clienteNombreInd}`
+  );
 }
 async function quitarEstadoVenta(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
@@ -1043,7 +1077,7 @@ function renderChatAbierto(){
 
   const deEnc = encodeURIComponent(de);
   let statusBtns = '';
-  if(puedeGestionar && (asig || esAdmin())){
+  if(puedeGestionar && asig){
     let btns = [];
     if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
@@ -1357,6 +1391,53 @@ async function agendarClientesWhatsapp(){
   }
 }
 
+/* ---------- DÓLAR BLUE EN VIVO ---------- */
+let _dolarBlueVenta = null;
+
+async function fetchDolarBlue(){
+  try{
+    const resp = await fetch('https://dolarapi.com/v1/dolares/blue');
+    const data = await resp.json();
+    _dolarBlueVenta = data.venta;
+    const el = document.getElementById('dolarVenta');
+    if(el) el.textContent = '$' + Number(data.venta).toLocaleString('es-AR');
+    const upd = document.getElementById('dolarUpdate');
+    if(upd){
+      const d = new Date(data.fechaActualizacion);
+      upd.textContent = 'Act. ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    }
+    calcularARS();
+  }catch(e){
+    console.error('No se pudo obtener el dólar blue', e);
+    const el = document.getElementById('dolarVenta');
+    if(el) el.textContent = 'Error';
+  }
+}
+
+function calcularARS(){
+  const input = document.getElementById('dolarInputUSD');
+  const result = document.getElementById('dolarResultARS');
+  if(!input || !result) return;
+  const usd = parseFloat(input.value) || 0;
+  const ars = _dolarBlueVenta ? usd * _dolarBlueVenta : 0;
+  result.textContent = '$' + Math.round(ars).toLocaleString('es-AR');
+}
+
+/* ---------- NOTIFICACIONES PUSH (ntfy.sh) ---------- */
+const NTFY_TOPIC = 'aruba-apple-ventas-notif';  // El admin debe suscribirse a este tema en la app ntfy
+
+async function enviarNotificacionPush(titulo, mensaje){
+  try{
+    await fetch('https://ntfy.sh/' + NTFY_TOPIC, {
+      method: 'POST',
+      headers: { 'Title': titulo, 'Tags': 'iphone,moneybag' },
+      body: mensaje
+    });
+  }catch(e){
+    console.error('No se pudo enviar la notificación push', e);
+  }
+}
+
 async function iniciarApp(){
   await cargarAsignaciones();
 
@@ -1372,6 +1453,10 @@ async function iniciarApp(){
 
   renderFiltros();
   renderListaUnificada();
+
+  // Dólar blue: carga inicial + actualización cada 5 minutos
+  fetchDolarBlue();
+  setInterval(fetchDolarBlue, 5 * 60 * 1000);
 
   // Realtime: asignaciones
   sb.channel('asignaciones-en-vivo')
