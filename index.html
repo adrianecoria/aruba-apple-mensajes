@@ -697,8 +697,8 @@ async function marcarVenta(canalId, deCodificado, equipo){
   const agenteNombre = sesionActual ? sesionActual.nombre : 'Desconocido';
   const equipoTxt = equipo ? (' — ' + equipo.modelo) : '';
   enviarNotificacionPush(
-    '💰 ¡Venta Cerrada!',
-    `${agenteNombre} cerró una venta con ${clienteNombre}${equipoTxt} (Nº ${nro})`
+    'Venta Cerrada!',
+    `💰 ${agenteNombre} cerró una venta con ${clienteNombre}${equipoTxt} (Nº ${nro})`
   );
 }
 /* ---------- SELECTOR DE EQUIPO AL CERRAR VENTA ---------- */
@@ -801,8 +801,8 @@ async function marcarIndeciso(canalId, deCodificado){
   const clienteNombreInd = (conv && conv.nombre) ? conv.nombre : de;
   const agenteNombreInd = sesionActual ? sesionActual.nombre : 'Desconocido';
   enviarNotificacionPush(
-    '⏳ Cliente Indeciso',
-    `${agenteNombreInd} marcó como indeciso a ${clienteNombreInd}`
+    'Cliente Indeciso',
+    `⏳ ${agenteNombreInd} marcó como indeciso a ${clienteNombreInd}`
   );
 }
 async function quitarEstadoVenta(canalId, deCodificado){
@@ -1428,13 +1428,18 @@ const NTFY_TOPIC = 'aruba-apple-ventas-notif';  // El admin debe suscribirse a e
 
 async function enviarNotificacionPush(titulo, mensaje){
   try{
-    await fetch('https://ntfy.sh/' + NTFY_TOPIC, {
+    await fetch('https://ntfy.sh/', {
       method: 'POST',
-      headers: { 'Title': titulo, 'Tags': 'iphone,moneybag' },
-      body: mensaje
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic: NTFY_TOPIC,
+        title: titulo,
+        message: mensaje,
+        tags: ['iphone','moneybag']
+      })
     });
   }catch(e){
-    console.error('No se pudo enviar la notificación push', e);
+    console.error('No se pudo enviar la notificacion push', e);
   }
 }
 
