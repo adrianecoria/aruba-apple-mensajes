@@ -17,7 +17,7 @@
   --grad1:#ff2fb0; --grad2:#b23bf0; --pink2:#ff6fc6;
   --txt:#f3eef6; --txt2:#a99cb0; --txt3:#746a7c;
   --green:#4ee08a; --red:#ff5470; --amber:#ffcf5c;
-  --wa:#25d366; --ms:#006aff; --ig:#dd2a7b;
+  --wa:#25d366; --ms:#006aff; --ig:#dd2a7b; --tk:#ffffff;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html,body{height:100%;}
@@ -136,12 +136,15 @@ input{font-family:inherit;}
 .plat-icon.whatsapp{background:var(--wa);}
 .plat-icon.messenger{background:var(--ms);}
 .plat-icon.instagram{background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);}
+.plat-icon.tiktok{background:var(--tk); border:1px solid rgba(255,255,255,0.25);}
+.plat-icon.tiktok svg{fill:#000 !important;}
 .plat-icon svg{width:13px; height:13px; fill:#fff;}
 
 .plat-tag{font-size:10px; font-weight:600; padding:2px 7px; border-radius:6px; display:inline-flex; align-items:center; gap:4px; flex-shrink:0;}
 .plat-tag.whatsapp{background:rgba(37,211,102,0.15); color:#4ee08a;}
 .plat-tag.messenger{background:rgba(0,106,255,0.15); color:#5ca8ff;}
 .plat-tag.instagram{background:rgba(221,42,123,0.15); color:#ff6fc6;}
+.plat-tag.tiktok{background:rgba(255,255,255,0.12); color:#ffffff;}
 
 /* ===== CHAT SHELL ===== */
 .config-box{margin:0 20px 14px; background:var(--card); border:1px solid var(--card-b); border-radius:14px; padding:16px; display:none; flex-shrink:0;}
@@ -166,6 +169,7 @@ input{font-family:inherit;}
 .conv-item.canal-instagram{box-shadow:0 0 14px 2px rgba(255,120,30,0.35), 0 0 32px 6px rgba(255,80,0,0.10);}
 .conv-item.canal-messenger{box-shadow:0 0 14px 2px rgba(50,130,255,0.35), 0 0 32px 6px rgba(30,100,255,0.10);}
 .conv-item.canal-whatsapp{box-shadow:0 0 14px 2px rgba(37,211,102,0.35), 0 0 32px 6px rgba(30,180,80,0.10);}
+.conv-item.canal-tiktok{box-shadow:0 0 14px 2px rgba(255,255,255,0.30), 0 0 32px 6px rgba(255,255,255,0.08);}
 .conv-avatar-wrap{position:relative; flex-shrink:0;}
 .conv-avatar{width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; flex-shrink:0;}
 .conv-avatar-wrap .plat-icon{position:absolute; bottom:-2px; right:-4px; width:18px; height:18px; border-radius:5px; border:2px solid var(--bg); font-size:9px;}
@@ -282,26 +286,26 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 @media (max-width:760px), (display-mode:standalone){
   /* === PWA MOBILE — ESTILO WHATSAPP === */
   body{background:#111b21; background-image:none;}
-  #app{height:100vh; height:100dvh; padding-top:env(safe-area-inset-top, 0px);}
+  #app{height:100vh; height:100dvh;}
 
   /* Topbar compacta */
-  .topbar{padding:14px 16px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.08);}
-  .topbar h1{font-size:20px;}
-  .topbar-right{gap:10px; font-size:14px; flex-wrap:wrap;}
-  .topbar-right a,.topbar-right span{font-size:14px;}
+  .topbar{padding:12px 16px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.08);}
+  .topbar h1{font-size:18px;}
+  .topbar-right{gap:10px; font-size:13px;}
+  .topbar-right a,.topbar-right span{font-size:13px;}
 
   /* Dolar bar compacta */
-  .dolar-bar{padding:9px 16px; gap:10px; background:rgba(0,80,40,0.15); border-bottom:1px solid rgba(255,255,255,0.06); min-height:40px;}
-  .dolar-bar .dolar-cotiz{gap:6px; font-size:15px;}
-  .dolar-bar .dolar-cotiz b{font-size:16px;}
-  .dolar-bar .dolar-calc{gap:5px; font-size:15px;}
-  .dolar-bar .dolar-calc input{width:70px; font-size:15px; padding:5px 8px;}
-  .dolar-bar .dolar-calc .calc-result{font-size:16px; min-width:80px;}
-  .dolar-bar .dolar-update{font-size:12px;}
+  .dolar-bar{padding:7px 14px; gap:10px; background:rgba(0,80,40,0.15); border-bottom:1px solid rgba(255,255,255,0.06); min-height:36px;}
+  .dolar-bar .dolar-cotiz{gap:6px; font-size:13px;}
+  .dolar-bar .dolar-cotiz b{font-size:14px;}
+  .dolar-bar .dolar-calc{gap:5px; font-size:13px;}
+  .dolar-bar .dolar-calc input{width:65px; font-size:13px; padding:4px 8px;}
+  .dolar-bar .dolar-calc .calc-result{font-size:14px; min-width:75px;}
+  .dolar-bar .dolar-update{font-size:11px;}
 
   /* Filtros scrollables */
-  .filtros{padding:10px 14px; gap:8px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06);}
-  .filtro-btn{padding:8px 16px; font-size:15px; border-radius:20px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);}
+  .filtros{padding:9px 12px; gap:7px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06);}
+  .filtro-btn{padding:7px 14px; font-size:13.5px; border-radius:18px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1);}
   .filtro-btn.active{background:#00a884; border-color:#00a884; color:#fff;}
 
   /* Chat shell fullscreen */
@@ -313,44 +317,44 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
   /* Conversaciones lista — estilo WhatsApp */
   .conv-search{padding:8px 10px; background:#111b21;}
-  .conv-search input{border-radius:20px; padding:11px 16px; background:rgba(255,255,255,0.08); border-color:transparent; font-size:16px;}
-  .conv-item{padding:14px 16px; margin:0; border-radius:0; border-bottom:1px solid rgba(255,255,255,0.06); box-shadow:none !important;}
+  .conv-search input{border-radius:20px; padding:10px 16px; background:rgba(255,255,255,0.08); border-color:transparent; font-size:15px;}
+  .conv-item{padding:12px 14px; margin:0; border-radius:0; border-bottom:1px solid rgba(255,255,255,0.06); box-shadow:none !important;}
   .conv-item:hover{background:rgba(255,255,255,0.04);}
   .conv-item.active{background:rgba(0,168,132,0.15);}
-  .conv-avatar{width:50px; height:50px; font-size:18px; background:#2a3942;}
-  .conv-info .nombre{font-size:17px;}
-  .conv-info .preview{font-size:15px; color:rgba(255,255,255,0.55);}
-  .conv-unread{background:#00a884; color:#fff; font-weight:700; font-size:13px;}
+  .conv-avatar{width:48px; height:48px; font-size:17px; background:#2a3942;}
+  .conv-info .nombre{font-size:16px;}
+  .conv-info .preview{font-size:14px; color:rgba(255,255,255,0.55);}
+  .conv-unread{background:#00a884; color:#fff; font-weight:700;}
 
   /* Back button visible */
   .back-btn{display:inline-flex; color:#00a884; font-size:22px; font-weight:700; padding:0 4px;}
 
   /* Chat header compacto */
-  .chat-header{padding:14px 16px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; flex-wrap:wrap;}
-  .chat-header .nombre{font-size:18px;}
-  .chat-header .idcontacto{font-size:13px;}
-  .chat-asig{font-size:13px; width:100%; text-align:left; margin-top:4px;}
+  .chat-header{padding:12px 14px; background:#1f2c33; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; flex-wrap:wrap;}
+  .chat-header .nombre{font-size:16px;}
+  .chat-header .idcontacto{font-size:12px;}
+  .chat-asig{font-size:12px; width:100%; text-align:left; margin-top:4px;}
   .chat-status-btns{width:100%; margin-top:6px; margin-left:0; overflow-x:auto; flex-wrap:nowrap;}
-  .chat-status-btns button{font-size:13px; padding:7px 14px; white-space:nowrap;}
+  .chat-status-btns button{font-size:12px; padding:6px 12px; white-space:nowrap;}
 
   /* Burbujas estilo WhatsApp */
   .chat-messages{padding:10px 12px; gap:4px;
     background:#0b141a url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 15 L30 12 L25 15Z' fill='rgba(255,255,255,0.012)'/%3E%3C/svg%3E");
   }
-  .msg{max-width:85%; padding:9px 13px; border-radius:8px; font-size:16px; line-height:1.45; position:relative; box-shadow:0 1px 1px rgba(0,0,0,0.15);}
+  .msg{max-width:85%; padding:8px 12px; border-radius:8px; font-size:15.5px; line-height:1.4; position:relative; box-shadow:0 1px 1px rgba(0,0,0,0.15);}
   .msg.in{background:#1a2a35; color:#e9edef; border-top-left-radius:0; border-bottom-left-radius:8px; align-self:flex-start;}
   .msg.out{background:#005c4b; color:#e9edef; border-top-right-radius:0; border-bottom-right-radius:8px; align-self:flex-end; background-image:none;}
-  .msg .hora{font-size:12px; opacity:0.5; margin-top:2px;}
+  .msg .hora{font-size:11.5px; opacity:0.5; margin-top:2px;}
 
   /* Reply box estilo WhatsApp */
-  .reply-box{padding:10px 12px; background:#1f2c33; border-top:none; gap:8px; flex-wrap:nowrap; align-items:center;}
-  .reply-box input{border-radius:20px; padding:12px 16px; font-size:16px; background:rgba(255,255,255,0.08); border-color:transparent;}
+  .reply-box{padding:8px 10px; background:#1f2c33; border-top:none; gap:6px; flex-wrap:nowrap; align-items:center;}
+  .reply-box input{border-radius:20px; padding:11px 16px; font-size:16px; background:rgba(255,255,255,0.08); border-color:transparent;}
   .reply-box input:focus{border-color:#00a884;}
-  .reply-box .btn{width:44px; height:44px; min-width:44px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#00a884; box-shadow:none; font-size:18px;}
+  .reply-box .btn{width:40px; height:40px; min-width:40px; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#00a884; box-shadow:none; font-size:16px;}
   .reply-box .btn:hover{background:#00bd96; transform:none; box-shadow:none;}
   .reply-box .btn::after{display:none;}
   .reply-box .plat-send-indicator{display:none;}
-  .btn-catalogo{padding:10px 14px; font-size:14px; border-radius:20px;}
+  .btn-catalogo{padding:9px 12px; font-size:13px; border-radius:20px;}
 
   /* Catálogo mobile */
   .catalogo-panel{bottom:56px; border-radius:16px 16px 0 0; max-height:60vh;}
@@ -363,7 +367,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   .venta-bar{padding:10px 14px; font-size:14px; gap:8px;}
   .venta-bar-nro{font-size:14px;}
   .venta-bar-nro b{font-size:16px;}
-  .btn-enviar-nro{padding:8px 14px; font-size:14px;}
+  .btn-enviar-nro{padding:7px 12px; font-size:13px;}
 
   /* Config y accesos mobile */
   .config-box{margin:0 8px 10px; border-radius:12px; padding:12px;}
@@ -380,12 +384,9 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   .chat-bloqueado{font-size:14px; padding:14px; background:#1f2c33;}
 
   /* Login mobile */
-  .login-card{padding:32px 28px; border-radius:20px;}
-  .login-brand span{font-size:22px;}
-  .login-card h2{font-size:24px;}
-  .login-card .field label{font-size:14px;}
-  .login-card input{font-size:16px; padding:12px 14px;}
-  .login-card .btn{font-size:16px; padding:14px;}
+  .login-card{padding:28px 24px; border-radius:20px;}
+  .login-brand span{font-size:19px;}
+  .login-card h2{font-size:20px;}
 }
 </style>
 </head>
@@ -491,13 +492,19 @@ const CANALES = [
       {k:'usuario', label:'Usuario', placeholder:'Ej: tuusuario (sin @)'},
       {k:'igId', label:'IG Business Account ID', placeholder:'De Meta for Developers'},
       {k:'token', label:'Access Token', placeholder:'Token de acceso de la API'}
+    ]},
+  { id:'tiktok', nombre:'TikTok', color:'var(--tk)', campos:[
+      {k:'usuario', label:'Usuario', placeholder:'Ej: tuusuario (sin @)'},
+      {k:'tikId', label:'TikTok Business Account ID', placeholder:'De TikTok for Developers'},
+      {k:'token', label:'Access Token', placeholder:'Token de acceso de la API'}
     ]}
 ];
 
 const PLAT_SVG = {
   whatsapp: '<svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.025.506 3.937 1.395 5.613L0 24l6.563-1.36A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-1.855 0-3.63-.5-5.185-1.445l-.372-.22-3.862.802.84-3.72-.243-.387A9.78 9.78 0 012.182 12c0-5.415 4.403-9.818 9.818-9.818S21.818 6.585 21.818 12 17.415 21.818 12 21.818z"/></svg>',
   messenger: '<svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111C24 4.975 18.627 0 12 0zm1.193 14.963l-3.056-3.26-5.963 3.26L10.733 8.4l3.13 3.26 5.889-3.26-6.559 6.563z"/></svg>',
-  instagram: '<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.668.072 4.948c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.668-.014 4.948-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>'
+  instagram: '<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.668.072 4.948c.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24s3.668-.014 4.948-.072c4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48V13.4a8.16 8.16 0 005.58 2.17v-3.45a4.85 4.85 0 01-2.99-1.04V6.69h2.99z"/></svg>'
 };
 
 let sesionActual = null;
