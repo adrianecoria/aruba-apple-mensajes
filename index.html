@@ -197,11 +197,15 @@ input{font-family:inherit;}
 .conv-estado-tag.indeciso{background:rgba(255,230,0,0.12); color:#ffe600; text-shadow:0 0 6px rgba(255,230,0,0.6), 0 0 12px rgba(255,230,0,0.3); animation:neonPulseYellow 2s ease-in-out infinite;}
 @keyframes neonPulseGreen{0%,100%{text-shadow:0 0 4px rgba(0,255,100,0.5),0 0 8px rgba(0,255,100,0.2);}50%{text-shadow:0 0 8px rgba(0,255,100,0.8),0 0 20px rgba(0,255,100,0.4),0 0 30px rgba(0,255,100,0.2);}}
 @keyframes neonPulseYellow{0%,100%{text-shadow:0 0 4px rgba(255,230,0,0.5),0 0 8px rgba(255,230,0,0.2);}50%{text-shadow:0 0 8px rgba(255,230,0,0.8),0 0 20px rgba(255,230,0,0.4),0 0 30px rgba(255,230,0,0.2);}}
+.conv-estado-tag.financiacion{background:rgba(0,180,255,0.12); color:#00b4ff; text-shadow:0 0 6px rgba(0,180,255,0.6), 0 0 12px rgba(0,180,255,0.3); animation:neonPulseBlue 2s ease-in-out infinite;}
+@keyframes neonPulseBlue{0%,100%{text-shadow:0 0 4px rgba(0,180,255,0.5),0 0 8px rgba(0,180,255,0.2);}50%{text-shadow:0 0 8px rgba(0,180,255,0.8),0 0 20px rgba(0,180,255,0.4),0 0 30px rgba(0,180,255,0.2);}}
 .btn-venta{padding:6px 12px; font-size:11px; font-weight:600; border:1px solid rgba(0,255,100,0.4); background:rgba(0,255,100,0.08); color:#00ff64; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
 .btn-venta:hover{background:rgba(0,255,100,0.18); border-color:#00ff64; box-shadow:0 0 12px rgba(0,255,100,0.3);}
 .btn-indeciso{padding:6px 12px; font-size:11px; font-weight:600; border:1px solid rgba(255,230,0,0.4); background:rgba(255,230,0,0.08); color:#ffe600; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
 .btn-indeciso:hover{background:rgba(255,230,0,0.18); border-color:#ffe600; box-shadow:0 0 12px rgba(255,230,0,0.3);}
-.chat-status-btns{display:flex; gap:6px; margin-left:auto; flex-shrink:0;}
+.btn-financiacion{padding:6px 12px; font-size:11px; font-weight:600; border:1px solid rgba(0,180,255,0.4); background:rgba(0,180,255,0.08); color:#00b4ff; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
+.btn-financiacion:hover{background:rgba(0,180,255,0.18); border-color:#00b4ff; box-shadow:0 0 12px rgba(0,180,255,0.3);}
+.chat-status-btns{display:flex; gap:6px; margin-left:auto; flex-shrink:0; flex-wrap:wrap;}
 
 /* Barra de Nº de venta */
 .venta-bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 16px; border-bottom:1px solid var(--card-b); background:rgba(0,255,100,0.06); flex-shrink:0;}
@@ -226,6 +230,17 @@ input{font-family:inherit;}
 .sel-item-det{font-size:11.5px; color:var(--txt2); margin-top:2px;}
 .sel-item-precio{display:flex; align-items:center; gap:3px; color:var(--green); font-weight:600;}
 .sel-precio-input{width:80px; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:7px 9px; outline:none;}
+.fin-form{padding:16px 18px; display:flex; flex-direction:column; gap:14px;}
+.fin-row{display:flex; align-items:center; gap:10px;}
+.fin-label{font-size:12px; color:var(--txt2); min-width:120px; font-weight:600;}
+.fin-value{font-size:14px; font-weight:700; color:var(--txt);}
+.fin-value.highlight{color:#00b4ff; font-size:16px;}
+.fin-select{background:rgba(255,255,255,0.06); border:1px solid rgba(0,180,255,0.3); border-radius:8px; color:var(--txt); font-size:13px; padding:7px 12px; outline:none; cursor:pointer; font-family:'Inter';}
+.fin-select:focus{border-color:#00b4ff; box-shadow:0 0 8px rgba(0,180,255,0.3);}
+.fin-resumen{background:rgba(0,180,255,0.06); border:1px solid rgba(0,180,255,0.2); border-radius:12px; padding:14px 16px; margin-top:4px;}
+.fin-resumen-titulo{font-size:11px; color:#00b4ff; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;}
+.btn-confirmar-fin{padding:10px 20px; font-size:13px; font-weight:700; border:1px solid rgba(0,180,255,0.5); background:rgba(0,180,255,0.12); color:#00b4ff; border-radius:10px; cursor:pointer; transition:all 0.2s; font-family:'Inter'; width:100%;}
+.btn-confirmar-fin:hover{background:rgba(0,180,255,0.25); border-color:#00b4ff; box-shadow:0 0 16px rgba(0,180,255,0.3);}
 .sel-precio-input:focus{border-color:var(--pink2);}
 .sel-foot{padding:12px 16px; border-top:1px solid var(--card-b); text-align:center;}
 
@@ -696,9 +711,9 @@ async function liberarConversacion(canalId, deCodificado){
 
 /* ---------- LÍMITE DE CLIENTES SIMULTÁNEOS POR AGENTE ---------- */
 // Una conversación "ocupa un cupo" mientras esté asignada al agente y todavía
-// no esté resuelta. Se libera al marcarla como "venta", "indeciso" o "cerrada".
+// no esté resuelta. Se libera al marcarla como "venta", "indeciso", "financiacion" o "cerrada".
 function estadoOcupaCupo(estado){
-  return estado !== 'venta' && estado !== 'indeciso' && estado !== 'cerrada';
+  return estado !== 'venta' && estado !== 'indeciso' && estado !== 'financiacion' && estado !== 'cerrada';
 }
 function misConversacionesActivas(){
   if(!sesionActual) return [];
@@ -923,6 +938,186 @@ async function marcarIndeciso(canalId, deCodificado){
     `⏳ ${agenteNombreInd} marcó como indeciso a ${clienteNombreInd}`
   );
 }
+/* ---------- POSIBLE FINANCIACIÓN ---------- */
+let _finCtx = null;   // { canal, deEnc }
+let _finEquipos = [];
+
+async function abrirModalFinanciacion(canalId, deCodificado){
+  _finCtx = { canal: canalId, deEnc: deCodificado };
+  let overlay = document.getElementById('finOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'finOverlay';
+    overlay.className = 'sel-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `<div class="sel-card">
+      <div class="sel-head"><h3>📋 Posible Financiación</h3><button class="sel-close" onclick="cerrarModalFinanciacion()">✕</button></div>
+      <input class="sel-search" id="finEquipoBuscar" placeholder="Buscar equipo..." oninput="renderFinEquipoLista(this.value)">
+      <div class="sel-list" id="finEquipoLista"><div class="catalogo-empty">Cargando equipos...</div></div>
+    </div>`;
+  _finEquipos = await cargarCatalogo();
+  renderFinEquipoLista('');
+}
+
+function renderFinEquipoLista(filtro){
+  const cont = document.getElementById('finEquipoLista');
+  if(!cont) return;
+  const q = (filtro||'').toLowerCase();
+  const lista = _finEquipos.filter(e => !q || (e.modelo+' '+(e.color||'')+' '+(e.imei||'')).toLowerCase().includes(q));
+  if(!lista.length){ cont.innerHTML = '<div class="catalogo-empty">No hay equipos disponibles.</div>'; return; }
+  cont.innerHTML = lista.map(e=>{
+    const precio = e.sugerido ? Number(e.sugerido) : 0;
+    return `<div class="sel-item" style="cursor:pointer" onclick="seleccionarEquipoFinanciacion('${e.id}')">
+      <div class="sel-item-info">
+        <div class="sel-item-modelo">${escapeHtml(e.modelo||'-')}</div>
+        <div class="sel-item-det">${escapeHtml(e.color||'-')} · 🔋 ${escapeHtml(String(e.bateria||'-'))}%${e.imei?(' · IMEI '+escapeHtml(e.imei)):''}</div>
+      </div>
+      <div class="sel-item-precio" style="color:#00b4ff"><span>$</span><span>${precio}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function seleccionarEquipoFinanciacion(equipoId){
+  const equipo = _finEquipos.find(x=>x.id===equipoId);
+  if(!equipo) return;
+  const overlay = document.getElementById('finOverlay');
+  if(!overlay) return;
+  const sugerido = Number(equipo.sugerido) || 0;
+  const anticipo = Math.round(sugerido * 0.5);
+  overlay.innerHTML = `<div class="sel-card">
+    <div class="sel-head"><h3>📋 Financiación: ${escapeHtml(equipo.modelo)}</h3><button class="sel-close" onclick="cerrarModalFinanciacion()">✕</button></div>
+    <div class="fin-form">
+      <div class="fin-row"><span class="fin-label">Equipo:</span><span class="fin-value">${escapeHtml(equipo.modelo)} ${escapeHtml(equipo.color||'')} 🔋${escapeHtml(String(equipo.bateria||'-'))}%</span></div>
+      <div class="fin-row"><span class="fin-label">Precio sugerido:</span><span class="fin-value">${sugerido} USD</span></div>
+      <div class="fin-row"><span class="fin-label">Anticipo / Seña (50%):</span><span class="fin-value">${anticipo} USD</span></div>
+      <div class="fin-row"><span class="fin-label">Cantidad de cuotas:</span>
+        <select class="fin-select" id="finCuotas" onchange="actualizarResumenFinanciacion('${equipoId}')">
+          <option value="3">3 cuotas (40% interés)</option>
+          <option value="6">6 cuotas (60% interés)</option>
+          <option value="9">9 cuotas (80% interés)</option>
+          <option value="12">12 cuotas (120% interés)</option>
+        </select>
+      </div>
+      <div class="fin-resumen" id="finResumen"></div>
+      <button class="btn-confirmar-fin" onclick="confirmarFinanciacion('${equipoId}')">📋 Enviar opción de financiación</button>
+    </div>
+  </div>`;
+  actualizarResumenFinanciacion(equipoId);
+}
+
+function actualizarResumenFinanciacion(equipoId){
+  const equipo = _finEquipos.find(x=>x.id===equipoId);
+  if(!equipo) return;
+  const sugerido = Number(equipo.sugerido) || 0;
+  const anticipo = Math.round(sugerido * 0.5);
+  const restante = sugerido - anticipo;
+  const sel = document.getElementById('finCuotas');
+  const cuotas = sel ? Number(sel.value) : 3;
+  const tasas = {3:0.40, 6:0.60, 9:0.80, 12:1.20};
+  const interes = tasas[cuotas] || 0.40;
+  const montoFinanciado = Math.round(restante * (1 + interes));
+  const valorCuota = Math.round(montoFinanciado / cuotas);
+  const cont = document.getElementById('finResumen');
+  if(!cont) return;
+  cont.innerHTML = `
+    <div class="fin-resumen-titulo">Resumen de financiación</div>
+    <div class="fin-row"><span class="fin-label">Monto a financiar:</span><span class="fin-value highlight">${montoFinanciado} USD</span></div>
+    <div class="fin-row"><span class="fin-label">Valor por cuota:</span><span class="fin-value highlight">${valorCuota} USD × ${cuotas} cuotas</span></div>
+    <div class="fin-row" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,180,255,0.15)"><span class="fin-label">Interés aplicado:</span><span class="fin-value">${Math.round(interes*100)}%</span></div>
+  `;
+}
+
+async function confirmarFinanciacion(equipoId){
+  const equipo = _finEquipos.find(x=>x.id===equipoId);
+  if(!equipo || !_finCtx) return;
+  const ctx = _finCtx;
+  const canalId = ctx.canal;
+  const deCodificado = ctx.deEnc;
+  const de = decodeURIComponent(deCodificado);
+  const conv = conversaciones[canalId]?.[de];
+
+  const sugerido = Number(equipo.sugerido) || 0;
+  const anticipo = Math.round(sugerido * 0.5);
+  const restante = sugerido - anticipo;
+  const sel = document.getElementById('finCuotas');
+  const cuotas = sel ? Number(sel.value) : 3;
+  const tasas = {3:0.40, 6:0.60, 9:0.80, 12:1.20};
+  const interes = tasas[cuotas] || 0.40;
+  const montoFinanciado = Math.round(restante * (1 + interes));
+  const valorCuota = Math.round(montoFinanciado / cuotas);
+
+  const equipoDesc = `${equipo.modelo} ${equipo.color||''} bat ${equipo.bateria||'-'}%`.trim();
+
+  // Enviar mensaje de financiación al cliente
+  const texto = `📋 *Opción de financiación:*\n${equipoDesc}\nAnticipo: ${anticipo}USD O EQUIVALENTE EN PESOS\n+ ${cuotas} CUOTAS MENSUALES DE ${valorCuota}USD O EQUIVALENTE EN PESOS`;
+
+  if(!esAdmin()){
+    const puedo = await reclamarConversacion(canalId, de);
+    if(!puedo){ renderChatAbierto(); renderListaUnificada(); cerrarModalFinanciacion(); return; }
+  }
+  try{
+    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal:canalId, destinatario:de, texto } });
+    if(error) throw new Error(error.message || 'Error');
+    if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
+  }catch(e){
+    alert('No se pudo enviar el mensaje de financiación: ' + (e.message||e));
+    cerrarModalFinanciacion();
+    return;
+  }
+
+  // Registrar la financiación en ventas_cuotas para el CRM
+  try{
+    const { data:vcData } = await sb.from('crm_datos').select('valor').eq('clave','ventas_cuotas').maybeSingle();
+    let cuotasArr = (vcData && Array.isArray(vcData.valor)) ? vcData.valor : [];
+    cuotasArr.push({
+      id: 'fin'+Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+      tipo: 'posible_financiacion',
+      equipo_id: equipo.id,
+      modelo: equipo.modelo,
+      color: equipo.color || '',
+      imei: equipo.imei || '',
+      bateria: equipo.bateria || '',
+      precio_sugerido: sugerido,
+      anticipo: anticipo,
+      cuotas: cuotas,
+      interes_pct: Math.round(interes*100),
+      monto_financiado: montoFinanciado,
+      valor_cuota: valorCuota,
+      cliente: (conv && conv.nombre) ? conv.nombre : de,
+      canal: canalId,
+      de: de,
+      agente: (sesionActual && (sesionActual.nombre || sesionActual.usuario)) || '',
+      vendedor_id: (sesionActual && sesionActual.vendedorId) || null,
+      fecha: new Date().toISOString().slice(0,10),
+      estado: 'propuesta',
+      creado_en: new Date().toISOString()
+    });
+    await sb.from('crm_datos').upsert({ clave:'ventas_cuotas', valor: cuotasArr, actualizado_en: new Date().toISOString() });
+  }catch(e){ console.error('No se pudo registrar la financiación para el CRM', e); }
+
+  // Marcar la conversación como financiación (libera cupo)
+  if(conv){ conv.estadoVenta = 'financiacion'; conv.cerrada = false; }
+  cerrarModalFinanciacion();
+  renderListaUnificada(); renderChatAbierto();
+  await actualizarEstadoDB(canalId, de, 'financiacion');
+
+  // Notificación push
+  const clienteNombreFin = (conv && conv.nombre) ? conv.nombre : de;
+  const agenteNombreFin = sesionActual ? sesionActual.nombre : 'Desconocido';
+  enviarNotificacionPush(
+    'Posible Financiación',
+    `📋 ${agenteNombreFin} envió opción de financiación a ${clienteNombreFin} — ${equipo.modelo} (${cuotas} cuotas)`
+  );
+}
+
+function cerrarModalFinanciacion(){
+  const overlay = document.getElementById('finOverlay');
+  if(overlay) overlay.style.display = 'none';
+  _finCtx = null;
+}
+
 async function quitarEstadoVenta(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
@@ -1083,6 +1278,7 @@ function renderListaUnificada(){
     const ev = c.estadoVenta;
     const estadoListaTag = ev === 'venta' ? `<span class="conv-estado-tag venta">💰 Venta${c.nroVenta?(' #'+c.nroVenta):''}</span>`
       : ev === 'indeciso' ? '<span class="conv-estado-tag indeciso">⏳ Indeciso</span>'
+      : ev === 'financiacion' ? '<span class="conv-estado-tag financiacion">📋 Financiación</span>'
       : cerrada ? '<span class="conv-estado-tag cerrada">Cerrada</span>'
       : '';
     if(esAdmin()){
@@ -1172,11 +1368,12 @@ function renderChatAbierto(){
   const estaCerrada = conv.cerrada === true;
   const esMiCliente = asig && asig.agente_usuario === sesionActual?.usuario;
   const puedeGestionar = esAdmin() || esMiCliente;
-  const estadoConv = conv.estadoVenta || null; // 'venta' | 'indeciso' | null
+  const estadoConv = conv.estadoVenta || null; // 'venta' | 'indeciso' | 'financiacion' | null
 
   function estadoTagHTML(){
     if(estadoConv === 'venta') return `<span class="conv-estado-tag venta">💰 Venta Cerrada</span>`;
     if(estadoConv === 'indeciso') return `<span class="conv-estado-tag indeciso">⏳ Indeciso</span>`;
+    if(estadoConv === 'financiacion') return `<span class="conv-estado-tag financiacion">📋 Posible Financiación</span>`;
     if(estaCerrada) return `<span class="conv-estado-tag cerrada">● Cerrada</span>`;
     if(asig) return `<span class="conv-estado-tag activa">● Activa</span>`;
     return '';
@@ -1199,6 +1396,7 @@ function renderChatAbierto(){
     let btns = [];
     if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
+    if(estadoConv !== 'financiacion') btns.push(`<button class="btn-financiacion" onclick="abrirModalFinanciacion('${canal}','${deEnc}')">📋 Posible Financiación</button>`);
     if(!estaCerrada) btns.push(`<button class="btn-cerrar-conv" onclick="cerrarConv('${canal}','${deEnc}')">Cerrar</button>`);
     if(estaCerrada) btns.push(`<button class="btn btn-sm" onclick="reabrirConv('${canal}','${deEnc}')">Reabrir</button>`);
     if(estadoConv) btns.push(`<button class="btn-cerrar-conv" onclick="quitarEstadoVenta('${canal}','${deEnc}')" style="border-color:rgba(255,255,255,0.15);color:var(--txt3)">✕ Quitar estado</button>`);
@@ -1448,6 +1646,7 @@ function reaplicarEstadosAsignaciones(){
     if(!conv || !a.estado) continue;
     if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = true; }
     else if(a.estado === 'indeciso'){ conv.estadoVenta = 'indeciso'; }
+    else if(a.estado === 'financiacion'){ conv.estadoVenta = 'financiacion'; }
     else if(a.estado === 'cerrada'){ conv.cerrada = true; conv.estadoVenta = null; }
     else { conv.cerrada = false; conv.estadoVenta = null; }
   }
