@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mensajes · Aruba Apple</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <meta name="theme-color" content="#0b0710">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -75,7 +77,7 @@ input{font-family:inherit;}
   50%{ box-shadow:0 0 100px rgba(255,47,176,0.25), 0 0 50px rgba(178,59,240,0.18), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color:rgba(255,111,198,0.45); }
 }
 .login-brand{display:flex; align-items:center; gap:12px; margin-bottom:28px; justify-content:center;}
-.login-brand .dot{width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); box-shadow:0 0 18px var(--pink2), 0 0 6px var(--grad1); animation:dotPulse 2s ease-in-out infinite;}
+.login-brand img.logo{width:60px; height:60px; object-fit:contain; filter:drop-shadow(0 0 12px var(--pink2)); animation:dotPulse 2s ease-in-out infinite;}
 @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 14px var(--pink2), 0 0 4px var(--grad1); transform:scale(1); } 50%{ box-shadow:0 0 24px var(--pink2), 0 0 10px var(--grad1); transform:scale(1.1); } }
 .login-brand span{font-family:'Manrope'; font-weight:800; font-size:22px; letter-spacing:-0.3px;}
 .login-card h2{font-size:22px; font-weight:800; margin-bottom:6px; text-align:center; background:linear-gradient(135deg, #fff 30%, var(--pink2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;}
@@ -100,7 +102,7 @@ input{font-family:inherit;}
 #app{display:none; flex-direction:column; height:100vh; width:100%;}
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; flex-wrap:wrap; gap:8px;}
 .topbar .brand{display:flex; align-items:center; gap:8px;}
-.topbar .brand .dot{width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); flex-shrink:0;}
+.topbar .brand img.logo{width:28px; height:28px; object-fit:contain; flex-shrink:0;}
 .topbar-right{display:flex; align-items:center; gap:14px; font-size:12px; color:var(--txt2); flex-wrap:wrap;}
 .topbar-right a{color:var(--pink2); cursor:pointer;}
 .topbar-right a:hover{text-decoration:underline;}
@@ -412,7 +414,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   <div class="login-orb orb2"></div>
   <div class="login-orb orb3"></div>
   <div class="login-card">
-    <div class="login-brand"><span class="dot"></span><span>Aruba Apple</span></div>
+    <div class="login-brand"><img class="logo" src="logo.png" alt="Aruba Apple"><span>Aruba Apple</span></div>
     <h2>Mensajes</h2>
     <div class="login-sub">Ingresá tu usuario y contraseña para continuar.</div>
     <div class="field"><label>Usuario</label><input id="loginUsuario" placeholder="Tu usuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
@@ -424,7 +426,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="dot"></span><h1>Mensajes · Aruba Apple</h1></div>
+    <div class="brand"><img class="logo" src="logo.png" alt="Aruba Apple"><h1>Mensajes · Aruba Apple</h1></div>
     <div class="topbar-right">
       <span id="estadoConexion"></span>
       <span id="cupoAgente" style="display:none;"></span>
