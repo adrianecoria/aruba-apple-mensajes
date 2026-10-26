@@ -77,7 +77,7 @@ input{font-family:inherit;}
   50%{ box-shadow:0 0 100px rgba(255,47,176,0.25), 0 0 50px rgba(178,59,240,0.18), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color:rgba(255,111,198,0.45); }
 }
 .login-brand{display:flex; align-items:center; gap:12px; margin-bottom:28px; justify-content:center;}
-.login-brand img.logo{width:38px; height:38px; object-fit:contain;}
+.login-brand img.logo{max-width:280px; width:80%; height:auto; object-fit:contain;}
 @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 14px var(--pink2), 0 0 4px var(--grad1); transform:scale(1); } 50%{ box-shadow:0 0 24px var(--pink2), 0 0 10px var(--grad1); transform:scale(1.1); } }
 .login-brand span{font-family:'Manrope'; font-weight:800; font-size:22px; letter-spacing:-0.3px;}
 .login-card h2{font-size:22px; font-weight:800; margin-bottom:6px; text-align:center; background:linear-gradient(135deg, #fff 30%, var(--pink2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;}
@@ -414,7 +414,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   <div class="login-orb orb2"></div>
   <div class="login-orb orb3"></div>
   <div class="login-card">
-    <div class="login-brand"><img class="logo" src="logo.png" alt="Aruba Apple"><span>Aruba Apple</span></div>
+    <div class="login-brand"><img class="logo" src="logo.png" alt="Aruba Apple"></div>
     <h2>Mensajes</h2>
     <div class="login-sub">Ingresá tu usuario y contraseña para continuar.</div>
     <div class="field"><label>Usuario</label><input id="loginUsuario" placeholder="Tu usuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
@@ -426,7 +426,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
 <div id="app">
   <div class="topbar">
-    <div class="brand"><img class="logo" src="logo.png" alt="Aruba Apple"><h1>Mensajes · Aruba Apple</h1></div>
+    <div class="brand"><img class="logo" src="apple-icon.png" alt="Aruba Apple"><h1>Mensajes · Aruba Apple</h1></div>
     <div class="topbar-right">
       <span id="estadoConexion"></span>
       <span id="cupoAgente" style="display:none;"></span>
