@@ -2042,6 +2042,16 @@ async function enviarTurnoCliente(dia, horaInicio, horaFin){
     const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal, destinatario: de, texto } });
     if(error) throw new Error(error.message || 'Error de conexión');
     if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
+    // Guardar turno en Supabase
+    const fechaTurno = calAnioActual+'-'+String(calMesActual+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+    try{
+      await sb.from('turnos').insert({
+        fecha: fechaTurno, hora_inicio: horaInicio, hora_fin: horaFin,
+        cliente_nombre: conversacionAbierta.nombre || de,
+        cliente_canal: canal, cliente_id: de,
+        direccion: direccion, estado: 'confirmado', creado_desde: 'mensajes'
+      });
+    }catch(edb){ console.error('No se pudo guardar turno en DB', edb); }
     // Feedback visual
     const slot = event?.target?.closest('.cal-slot');
     if(slot){
