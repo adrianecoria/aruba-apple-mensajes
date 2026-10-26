@@ -325,6 +325,18 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 .cal-slot .slot-send{font-size:10.5px; font-weight:600; color:var(--pink2); padding:4px 10px; border-radius:6px; background:rgba(255,47,176,0.1); border:1px solid rgba(255,47,176,0.25); cursor:pointer; transition:all 0.2s; white-space:nowrap;}
 .cal-slot .slot-send:hover{background:rgba(255,47,176,0.2); border-color:var(--pink2); box-shadow:0 0 8px rgba(255,47,176,0.2);}
 .cal-slots-empty{color:var(--txt3); font-size:12px; text-align:center; padding:20px 10px;}
+.cal-slot.slot-parcial{background:rgba(255,207,92,0.10); border-color:rgba(255,207,92,0.25);}
+.cal-slot.slot-parcial .slot-hora::after{content:' (1/2)'; font-size:10px; color:#ffcf5c; font-weight:400;}
+.cal-slot.slot-lleno{background:rgba(255,84,112,0.08); border-color:rgba(255,84,112,0.18); cursor:not-allowed; opacity:0.6; pointer-events:none;}
+.cal-slot.slot-lleno .slot-hora{color:var(--txt3);}
+.cal-slot.slot-lleno .slot-hora::after{content:' (2/2 completo)'; font-size:10px; color:#ff5470; font-weight:400;}
+.cal-slot.slot-lleno .slot-send{display:none;}
+.cal-turno-break{text-align:center; font-size:11px; color:var(--txt3); padding:4px; font-style:italic;}
+.cal-slots-legend{display:flex; gap:12px; font-size:10px; color:var(--txt3); padding:0 6px 6px; flex-wrap:wrap;}
+.cal-slots-legend span::before{content:''; display:inline-block; width:8px; height:8px; border-radius:3px; margin-right:3px; vertical-align:middle;}
+.cal-slots-legend .leg-disp::before{background:#4ee08a;}
+.cal-slots-legend .leg-parc::before{background:#ffcf5c;}
+.cal-slots-legend .leg-full::before{background:#ff5470;}
 .cal-turno-break{font-size:10px; color:var(--txt3); text-align:center; padding:4px 0; font-style:italic;}
 .cal-no-conv{color:var(--txt3); font-size:12px; text-align:center; padding:30px 16px; line-height:1.6;}
 .cal-address{font-size:11px; color:var(--txt3); padding:8px 16px; border-top:1px solid var(--card-b); flex-shrink:0; display:flex; align-items:center; gap:6px;}
@@ -1984,7 +1996,7 @@ function generarTurnos(diaSemana){
   return turnos;
 }
 
-function renderTurnos(dia){
+async function renderTurnos(dia){
   const slots = document.getElementById('calSlots');
   if(!slots) return;
   const fecha = new Date(calAnioActual, calMesActual, dia);
@@ -1997,7 +2009,21 @@ function renderTurnos(dia){
     return;
   }
 
-  let html = `<div class="cal-slots-title">📅 ${nombreDia} ${dia} de ${MESES_ES[calMesActual]} <span class="cal-day-badge">${turnos.filter(t=>!t.break).length} turnos</span></div>`;
+  // Load existing turnos from Supabase for this date
+  const fechaStr = calAnioActual+'-'+String(calMesActual+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+  let conteo = {};
+  try{
+    const {data, error} = await sb.from('turnos').select('hora_inicio').eq('fecha', fechaStr).neq('estado','cancelado');
+    if(!error && data){
+      data.forEach(t => { conteo[t.hora_inicio] = (conteo[t.hora_inicio]||0)+1; });
+    }
+  }catch(e){ console.error('Error cargando turnos mensajes:', e); }
+
+  const slotsReales = turnos.filter(t=>!t.break);
+  const totalDisp = slotsReales.reduce((s,t) => s + Math.max(0, 2 - (conteo[t.inicio]||0)), 0);
+
+  let html = `<div class="cal-slots-title">📅 ${nombreDia} ${dia} de ${MESES_ES[calMesActual]} <span class="cal-day-badge">${totalDisp}/${slotsReales.length*2} disponibles</span></div>`;
+  html += `<div class="cal-slots-legend"><span class="leg-disp">Disponible</span><span class="leg-parc">1 turno</span><span class="leg-full">Completo</span></div>`;
 
   if(!conversacionAbierta){
     html += `<div class="cal-slots-empty">Seleccioná una conversación para poder enviar un turno al cliente.</div>`;
@@ -2010,9 +2036,14 @@ function renderTurnos(dia){
       html += `<div class="cal-turno-break">— almuerzo —</div>`;
       return;
     }
-    html += `<div class="cal-slot" onclick="enviarTurnoCliente(${dia},'${t.inicio}','${t.fin}')">
+    const ocupados = conteo[t.inicio] || 0;
+    let extraCls = '';
+    if(ocupados === 1) extraCls = ' slot-parcial';
+    if(ocupados >= 2) extraCls = ' slot-lleno';
+
+    html += `<div class="cal-slot${extraCls}" ${ocupados < 2 ? `onclick="enviarTurnoCliente(${dia},'${t.inicio}','${t.fin}')"` : ''}>
       <span class="slot-hora">${t.inicio} – ${t.fin} hs</span>
-      <span class="slot-send">📤 Enviar</span>
+      ${ocupados < 2 ? `<span class="slot-send">📤 Enviar</span>` : ''}
     </div>`;
   });
 
@@ -2025,6 +2056,17 @@ async function enviarTurnoCliente(dia, horaInicio, horaFin){
   const direccion = document.getElementById('calDireccion')?.textContent || CAL_DIRECCION_DEFAULT;
   const mesNombre = MESES_ES[calMesActual].toLowerCase();
   const texto = `Confirmame: Te esperamos el dia ${dia} de ${mesNombre} en el horario de ${horaInicio} a ${horaFin} hs, en ${direccion}.`;
+
+  // Double-check availability before sending
+  const fechaTurno = calAnioActual+'-'+String(calMesActual+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
+  try{
+    const {data:existing} = await sb.from('turnos').select('id').eq('fecha', fechaTurno).eq('hora_inicio', horaInicio).neq('estado','cancelado');
+    if(existing && existing.length >= 2){
+      alert('Este horario ya tiene 2 turnos asignados. Elegí otro.');
+      renderTurnos(dia);
+      return;
+    }
+  }catch(e){ console.error('Error verificando disponibilidad', e); }
 
   if(!confirm(`¿Enviar este turno al cliente?\n\n${texto}`)) return;
 
@@ -2044,7 +2086,6 @@ async function enviarTurnoCliente(dia, horaInicio, horaFin){
     if(error) throw new Error(error.message || 'Error de conexión');
     if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
     // Guardar turno en Supabase
-    const fechaTurno = calAnioActual+'-'+String(calMesActual+1).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
     try{
       await sb.from('turnos').insert({
         fecha: fechaTurno, hora_inicio: horaInicio, hora_fin: horaFin,
@@ -2053,17 +2094,8 @@ async function enviarTurnoCliente(dia, horaInicio, horaFin){
         direccion: direccion, estado: 'confirmado', creado_desde: 'mensajes'
       });
     }catch(edb){ console.error('No se pudo guardar turno en DB', edb); }
-    // Feedback visual
-    const slot = event?.target?.closest('.cal-slot');
-    if(slot){
-      slot.style.background = 'rgba(78,224,138,0.15)';
-      slot.style.borderColor = 'var(--green)';
-      slot.querySelector('.slot-send').textContent = '✓ Enviado';
-      slot.querySelector('.slot-send').style.color = 'var(--green)';
-      slot.querySelector('.slot-send').style.borderColor = 'var(--green)';
-      slot.querySelector('.slot-send').style.background = 'rgba(78,224,138,0.12)';
-      slot.style.pointerEvents = 'none';
-    }
+    // Re-render slots to update availability
+    await renderTurnos(dia);
   }catch(e){
     alert('No se pudo enviar el turno: ' + (e.message || e));
   }
