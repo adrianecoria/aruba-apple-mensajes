@@ -1975,23 +1975,15 @@ function generarTurnos(diaSemana){
   const turnos = [];
   if(diaSemana === 0) return turnos; // Domingo: sin turnos
 
-  if(diaSemana >= 1 && diaSemana <= 5){
-    // Lunes a Viernes: 10:00-13:00 y 14:00-18:00
-    for(let h = 10; h < 13; h++){
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 12 ? '13' : (h+1).toString().padStart(2,'0')}:00` });
-    }
-    turnos.push({ break: true }); // Separador de almuerzo
-    for(let h = 14; h < 18; h++){
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 17 ? '18' : (h+1).toString().padStart(2,'0')}:00` });
-    }
-  } else if(diaSemana === 6){
-    // Sábado: 10:00-18:00 (corrido)
-    for(let h = 10; h < 18; h++){
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
-      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 17 ? '18' : (h+1).toString().padStart(2,'0')}:00` });
-    }
+  // Lunes a Sábado: 10:00-13:00 y 14:00-18:00
+  for(let h = 10; h < 13; h++){
+    turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
+    turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 12 ? '13' : (h+1).toString().padStart(2,'0')}:00` });
+  }
+  turnos.push({ break: true }); // Separador de almuerzo
+  for(let h = 14; h < 18; h++){
+    turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
+    turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 17 ? '18' : (h+1).toString().padStart(2,'0')}:00` });
   }
   return turnos;
 }
