@@ -787,6 +787,11 @@ async function marcarVenta(canalId, deCodificado, equipo){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
 
+  // Si es admin y la conversación no está asignada, asignarla al admin primero
+  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
+    await reclamarConversacion(canalId, de);
+  }
+
   // Generar un Nº de venta sólo si la conversación todavía no tiene uno
   let nro = conv?.nroVenta || null;
   if(!nro){
@@ -926,6 +931,12 @@ async function enviarNroVentaCliente(canalId, deCodificado){
 async function marcarIndeciso(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
+
+  // Si es admin y la conversación no está asignada, asignarla al admin primero
+  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
+    await reclamarConversacion(canalId, de);
+  }
+
   if(conv) conv.estadoVenta = 'indeciso';
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'indeciso');
@@ -1037,6 +1048,11 @@ async function confirmarFinanciacion(equipoId){
   const deCodificado = ctx.deEnc;
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
+
+  // Si es admin y la conversación no está asignada, asignarla al admin primero
+  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
+    await reclamarConversacion(canalId, de);
+  }
 
   const sugerido = Number(equipo.sugerido) || 0;
   const anticipo = Math.round(sugerido * 0.5);
@@ -1312,9 +1328,19 @@ async function abrirConversacion(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
 
   // Límite de clientes simultáneos para agentes (los administradores no tienen tope)
-  if(!esAdmin()){
-    const asig = asignaciones[claveAsig(canalId, de)];
-    const yaEsMia = asig && asig.agente_usuario === sesionActual.usuario;
+  const asigActual = asignaciones[claveAsig(canalId, de)];
+  const yaEsMia = asigActual && asigActual.agente_usuario === sesionActual.usuario;
+
+  if(esAdmin()){
+    // El admin toma la conversación sin límite de cupo
+    if(!yaEsMia){
+      const puedo = await reclamarConversacion(canalId, de);
+      if(!puedo){
+        // Otro agente ya la tiene — el admin puede verla pero ya está asignada
+      }
+      renderListaUnificada();
+    }
+  } else {
     if(!yaEsMia){
       if(misConversacionesActivas().length >= LIMITE_CONV_ACTIVAS){
         alert(`Ya estás atendiendo ${LIMITE_CONV_ACTIVAS} clientes al mismo tiempo.\n\nMarcá una conversación como "Venta cerrada" o "Indeciso" (o cerrala) para poder abrir otra.`);
@@ -1392,7 +1418,7 @@ function renderChatAbierto(){
 
   const deEnc = encodeURIComponent(de);
   let statusBtns = '';
-  if(puedeGestionar && asig){
+  if(puedeGestionar && (asig || esAdmin())){
     let btns = [];
     if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
@@ -1671,10 +1697,20 @@ function uid(){ return 'wa'+Date.now().toString(36)+Math.random().toString(36).s
 function soloDigitos(s){ return String(s||'').replace(/\D/g,''); }
 let _syncClientesEnCurso = false;
 
-async function agendarClientesWhatsapp(){
+async function agendarClientesTodosCanales(){
   if(_syncClientesEnCurso) return;
-  const waConvs = conversaciones['whatsapp'] ? Object.keys(conversaciones['whatsapp']) : [];
-  if(!waConvs.length) return;
+
+  // Recopilar contactos de todos los canales: whatsapp, instagram, messenger, tiktok
+  const contactos = []; // { canal, de }
+  ['whatsapp','instagram','messenger','tiktok'].forEach(canal => {
+    if(conversaciones[canal]){
+      Object.keys(conversaciones[canal]).forEach(de => {
+        contactos.push({ canal, de });
+      });
+    }
+  });
+  if(!contactos.length) return;
+
   _syncClientesEnCurso = true;
   try{
     // Traer lo último de clientes desde la nube para no pisar cambios del CRM
@@ -1682,27 +1718,41 @@ async function agendarClientesWhatsapp(){
     const { data } = await sb.from('crm_datos').select('valor').eq('clave','clientes').maybeSingle();
     clientesCRM = (data && Array.isArray(data.valor)) ? data.valor : [];
 
+    // Set de teléfonos existentes (para WhatsApp)
     const telsExistentes = new Set(clientesCRM.map(c => soloDigitos(c.telefono)).filter(Boolean));
+    // Set de usuarios existentes (para Instagram, Messenger, TikTok) — guardados en campo telefono como @usuario
+    const usersExistentes = new Set(clientesCRM.map(c => c.telefono).filter(t => t && t.startsWith('@')));
+
     let maxNum = clientesCRM.reduce((mx,c)=>{
       if(c.nombre==='Cliente' && /^\d+$/.test(String(c.apellido||''))) return Math.max(mx, parseInt(c.apellido,10));
       return mx;
     }, 0);
 
     let agregados = 0;
-    waConvs.forEach(de => {
-      const tel = soloDigitos(de);
-      if(!tel || telsExistentes.has(tel)) return; // ya agendado (por el CRM o automáticamente)
-      maxNum++;
-      clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:de, direccion:'' });
-      telsExistentes.add(tel);
-      agregados++;
+    contactos.forEach(({ canal, de }) => {
+      if(canal === 'whatsapp'){
+        const tel = soloDigitos(de);
+        if(!tel || telsExistentes.has(tel)) return;
+        maxNum++;
+        clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:de, direccion:'' });
+        telsExistentes.add(tel);
+        agregados++;
+      } else {
+        // Instagram, Messenger, TikTok — guardar nombre de usuario
+        const usuario = '@' + de.replace(/^@/,'');
+        if(usersExistentes.has(usuario)) return;
+        maxNum++;
+        clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:usuario, direccion:'' });
+        usersExistentes.add(usuario);
+        agregados++;
+      }
     });
 
     if(agregados > 0){
       await sb.from('crm_datos').upsert({ clave:'clientes', valor: clientesCRM, actualizado_en: new Date().toISOString() });
     }
   }catch(e){
-    console.error('No se pudieron agendar clientes de WhatsApp en el CRM', e);
+    console.error('No se pudieron agendar clientes en el CRM', e);
   }finally{
     _syncClientesEnCurso = false;
   }
@@ -1778,7 +1828,7 @@ async function iniciarApp(){
 
   reaplicarEstadosAsignaciones();
   await cargarVentasMensajes();
-  await agendarClientesWhatsapp();
+  await agendarClientesTodosCanales();
 
   renderFiltros();
   renderListaUnificada();
@@ -1807,7 +1857,7 @@ async function iniciarApp(){
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload => {
       const m = payload.new;
       agregarMensajeAConversacion(m.canal, m);
-      if(m.canal === 'whatsapp' && m.direccion === 'entrante') agendarClientesWhatsapp();
+      if(m.direccion === 'entrante') agendarClientesTodosCanales();
       renderListaUnificada();
       if(conversacionAbierta && conversacionAbierta.canal === m.canal && conversacionAbierta.de === m.de){
         const msgsCont = document.getElementById('chatMsgs');
