@@ -2102,7 +2102,17 @@ async function enviarTurnoCliente(dia, horaInicio, horaFin){
 }
 
 // Inicializar calendario al cargar
-document.addEventListener('DOMContentLoaded', () => { renderCalendario(); });
+document.addEventListener('DOMContentLoaded', () => {
+  renderCalendario();
+  // Suscripción Realtime para sincronizar turnos en tiempo real
+  if(sb){
+    sb.channel('turnos-realtime-msg')
+      .on('postgres_changes', {event:'*', schema:'public', table:'turnos'}, ()=>{
+        if(calDiaSeleccionado) renderTurnos(calDiaSeleccionado);
+      })
+      .subscribe();
+  }
+});
 
 // === PWA: Registro del Service Worker ===
 if('serviceWorker' in navigator){
