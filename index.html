@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mensajes · Aruba Apple</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="logo.png">
-<link rel="apple-touch-icon" href="logo.png">
 <meta name="theme-color" content="#0b0710">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -76,9 +74,8 @@ input{font-family:inherit;}
   0%,100%{ box-shadow:0 0 60px rgba(255,47,176,0.12), 0 0 30px rgba(178,59,240,0.08), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); border-color:rgba(255,111,198,0.20); }
   50%{ box-shadow:0 0 100px rgba(255,47,176,0.25), 0 0 50px rgba(178,59,240,0.18), 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12); border-color:rgba(255,111,198,0.45); }
 }
-.login-brand{display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:28px; justify-content:center;}
-.login-brand img.logo{max-width:280px; width:80%; height:auto; object-fit:contain;}
-.login-brand .eslogan{font-family:'Manrope'; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; background:linear-gradient(135deg, #5bc0eb 0%, #b23bf0 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-align:center;}
+.login-brand{display:flex; align-items:center; gap:12px; margin-bottom:28px; justify-content:center;}
+.login-brand .dot{width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); box-shadow:0 0 18px var(--pink2), 0 0 6px var(--grad1); animation:dotPulse 2s ease-in-out infinite;}
 @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 14px var(--pink2), 0 0 4px var(--grad1); transform:scale(1); } 50%{ box-shadow:0 0 24px var(--pink2), 0 0 10px var(--grad1); transform:scale(1.1); } }
 .login-brand span{font-family:'Manrope'; font-weight:800; font-size:22px; letter-spacing:-0.3px;}
 .login-card h2{font-size:22px; font-weight:800; margin-bottom:6px; text-align:center; background:linear-gradient(135deg, #fff 30%, var(--pink2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;}
@@ -103,7 +100,7 @@ input{font-family:inherit;}
 #app{display:none; flex-direction:column; height:100vh; width:100%;}
 .topbar{display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; flex-wrap:wrap; gap:8px;}
 .topbar .brand{display:flex; align-items:center; gap:8px;}
-.topbar .brand img.logo{width:36px; height:36px; object-fit:contain; flex-shrink:0;}
+.topbar .brand .dot{width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--grad1),var(--grad2)); flex-shrink:0;}
 .topbar-right{display:flex; align-items:center; gap:14px; font-size:12px; color:var(--txt2); flex-wrap:wrap;}
 .topbar-right a{color:var(--pink2); cursor:pointer;}
 .topbar-right a:hover{text-decoration:underline;}
@@ -300,6 +297,38 @@ input{font-family:inherit;}
 .user-row .quien small{display:block; color:var(--txt3); font-size:11px; margin-top:1px;}
 select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:13px; padding:9px 10px; outline:none; font-family:inherit;}
 
+/* ===== CALENDARIO / ALMANAQUE ===== */
+.calendar-panel{width:320px; flex-shrink:0; border-left:1px solid var(--card-b); display:flex; flex-direction:column; overflow-y:auto; background:rgba(0,0,0,0.10);}
+.cal-header{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--card-b); flex-shrink:0;}
+.cal-header h3{font-family:'Manrope'; font-weight:800; font-size:14px; text-transform:capitalize;}
+.cal-nav{background:none; border:1px solid var(--card-b); border-radius:8px; color:var(--txt2); cursor:pointer; padding:4px 10px; font-size:14px; transition:all 0.2s;}
+.cal-nav:hover{border-color:var(--pink2); color:var(--pink2);}
+.cal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding:8px 10px 4px; gap:2px;}
+.cal-weekdays span{font-size:10px; font-weight:700; color:var(--txt3); text-transform:uppercase; letter-spacing:0.5px;}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:4px 10px 10px;}
+.cal-day{aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; color:var(--txt2); background:rgba(255,255,255,0.03); border:1px solid transparent; position:relative;}
+.cal-day:hover{background:rgba(255,255,255,0.08); border-color:var(--card-b);}
+.cal-day.today{border-color:var(--pink2); color:var(--pink2); background:rgba(255,47,176,0.08);}
+.cal-day.selected{background:linear-gradient(135deg,var(--grad1),var(--grad2)); color:#fff; border-color:transparent; box-shadow:0 0 12px rgba(255,47,176,0.3);}
+.cal-day.empty{background:transparent; cursor:default; pointer-events:none;}
+.cal-day.domingo{color:var(--txt3); opacity:0.4; cursor:not-allowed;}
+.cal-day.domingo:hover{background:rgba(255,255,255,0.03); border-color:transparent;}
+.cal-day.past{opacity:0.3; cursor:not-allowed;}
+.cal-day.past:hover{background:rgba(255,255,255,0.03); border-color:transparent;}
+.cal-slots{flex:1; overflow-y:auto; padding:0 10px 10px;}
+.cal-slots-title{font-size:12px; font-weight:700; color:var(--txt2); padding:10px 6px 8px; border-bottom:1px solid var(--card-b); margin-bottom:6px; text-transform:capitalize; display:flex; align-items:center; gap:8px;}
+.cal-slots-title .cal-day-badge{font-size:10px; background:rgba(255,47,176,0.15); color:var(--pink2); padding:2px 8px; border-radius:6px; font-weight:600;}
+.cal-slot{display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border-radius:10px; margin-bottom:4px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); transition:all 0.2s; cursor:pointer;}
+.cal-slot:hover{background:rgba(255,255,255,0.08); border-color:var(--card-b);}
+.cal-slot .slot-hora{font-size:12.5px; font-weight:600; color:var(--txt); font-family:'Manrope';}
+.cal-slot .slot-send{font-size:10.5px; font-weight:600; color:var(--pink2); padding:4px 10px; border-radius:6px; background:rgba(255,47,176,0.1); border:1px solid rgba(255,47,176,0.25); cursor:pointer; transition:all 0.2s; white-space:nowrap;}
+.cal-slot .slot-send:hover{background:rgba(255,47,176,0.2); border-color:var(--pink2); box-shadow:0 0 8px rgba(255,47,176,0.2);}
+.cal-slots-empty{color:var(--txt3); font-size:12px; text-align:center; padding:20px 10px;}
+.cal-turno-break{font-size:10px; color:var(--txt3); text-align:center; padding:4px 0; font-style:italic;}
+.cal-no-conv{color:var(--txt3); font-size:12px; text-align:center; padding:30px 16px; line-height:1.6;}
+.cal-address{font-size:11px; color:var(--txt3); padding:8px 16px; border-top:1px solid var(--card-b); flex-shrink:0; display:flex; align-items:center; gap:6px;}
+.cal-address span{color:var(--txt2);}
+
 .back-btn{display:none; color:var(--pink2); font-size:13px; cursor:pointer;}
 @media (max-width:760px), (display-mode:standalone){
   /* === PWA MOBILE — ESTILO WHATSAPP === */
@@ -401,6 +430,9 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   /* Chat bloqueado */
   .chat-bloqueado{font-size:14px; padding:14px; background:#1f2c33;}
 
+  /* Calendario oculto en mobile */
+  .calendar-panel{display:none !important;}
+
   /* Login mobile */
   .login-card{padding:28px 24px; border-radius:20px;}
   .login-brand span{font-size:19px;}
@@ -415,7 +447,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
   <div class="login-orb orb2"></div>
   <div class="login-orb orb3"></div>
   <div class="login-card">
-    <div class="login-brand"><img class="logo" src="logo.png" alt="Aruba Apple"><span class="eslogan">Soluciones Tecnológicas &amp; Financieras</span></div>
+    <div class="login-brand"><span class="dot"></span><span>Aruba Apple</span></div>
     <h2>Mensajes</h2>
     <div class="login-sub">Ingresá tu usuario y contraseña para continuar.</div>
     <div class="field"><label>Usuario</label><input id="loginUsuario" placeholder="Tu usuario" onkeydown="if(event.key==='Enter') document.getElementById('loginClave').focus()"></div>
@@ -427,7 +459,7 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 
 <div id="app">
   <div class="topbar">
-    <div class="brand"><img class="logo" src="apple-icon.png" alt="Aruba Apple"><h1>Mensajes · Aruba Apple</h1></div>
+    <div class="brand"><span class="dot"></span><h1>Mensajes · Aruba Apple</h1></div>
     <div class="topbar-right">
       <span id="estadoConexion"></span>
       <span id="cupoAgente" style="display:none;"></span>
@@ -486,6 +518,19 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
     </div>
     <div class="chat-area" id="chatArea">
       <div class="chat-vacio">Elegí una conversación de la izquierda para ver los mensajes.</div>
+    </div>
+    <div class="calendar-panel" id="calendarPanel">
+      <div class="cal-header">
+        <button class="cal-nav" onclick="calMesAnterior()">‹</button>
+        <h3 id="calMesLabel"></h3>
+        <button class="cal-nav" onclick="calMesSiguiente()">›</button>
+      </div>
+      <div class="cal-weekdays"><span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span></div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-slots" id="calSlots">
+        <div class="cal-no-conv">Seleccioná un día del calendario para ver los turnos disponibles.</div>
+      </div>
+      <div class="cal-address">📍 <span id="calDireccion">Alsina 16, localidad de Ramos Mejia, Buenos Aires</span></div>
     </div>
   </div>
 </div>
@@ -790,11 +835,6 @@ async function marcarVenta(canalId, deCodificado, equipo){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
 
-  // Si es admin y la conversación no está asignada, asignarla al admin primero
-  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
-    await reclamarConversacion(canalId, de);
-  }
-
   // Generar un Nº de venta sólo si la conversación todavía no tiene uno
   let nro = conv?.nroVenta || null;
   if(!nro){
@@ -934,12 +974,6 @@ async function enviarNroVentaCliente(canalId, deCodificado){
 async function marcarIndeciso(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
-
-  // Si es admin y la conversación no está asignada, asignarla al admin primero
-  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
-    await reclamarConversacion(canalId, de);
-  }
-
   if(conv) conv.estadoVenta = 'indeciso';
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'indeciso');
@@ -1051,11 +1085,6 @@ async function confirmarFinanciacion(equipoId){
   const deCodificado = ctx.deEnc;
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
-
-  // Si es admin y la conversación no está asignada, asignarla al admin primero
-  if(esAdmin() && !asignaciones[claveAsig(canalId, de)]){
-    await reclamarConversacion(canalId, de);
-  }
 
   const sugerido = Number(equipo.sugerido) || 0;
   const anticipo = Math.round(sugerido * 0.5);
@@ -1331,19 +1360,9 @@ async function abrirConversacion(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
 
   // Límite de clientes simultáneos para agentes (los administradores no tienen tope)
-  const asigActual = asignaciones[claveAsig(canalId, de)];
-  const yaEsMia = asigActual && asigActual.agente_usuario === sesionActual.usuario;
-
-  if(esAdmin()){
-    // El admin toma la conversación sin límite de cupo
-    if(!yaEsMia){
-      const puedo = await reclamarConversacion(canalId, de);
-      if(!puedo){
-        // Otro agente ya la tiene — el admin puede verla pero ya está asignada
-      }
-      renderListaUnificada();
-    }
-  } else {
+  if(!esAdmin()){
+    const asig = asignaciones[claveAsig(canalId, de)];
+    const yaEsMia = asig && asig.agente_usuario === sesionActual.usuario;
     if(!yaEsMia){
       if(misConversacionesActivas().length >= LIMITE_CONV_ACTIVAS){
         alert(`Ya estás atendiendo ${LIMITE_CONV_ACTIVAS} clientes al mismo tiempo.\n\nMarcá una conversación como "Venta cerrada" o "Indeciso" (o cerrala) para poder abrir otra.`);
@@ -1421,7 +1440,7 @@ function renderChatAbierto(){
 
   const deEnc = encodeURIComponent(de);
   let statusBtns = '';
-  if(puedeGestionar && (asig || esAdmin())){
+  if(puedeGestionar && asig){
     let btns = [];
     if(estadoConv !== 'venta') btns.push(`<button class="btn-venta" onclick="abrirSelectorEquipoVenta('${canal}','${deEnc}')">💰 Venta Cerrada</button>`);
     if(estadoConv !== 'indeciso') btns.push(`<button class="btn-indeciso" onclick="marcarIndeciso('${canal}','${deEnc}')">⏳ Indeciso</button>`);
@@ -1477,6 +1496,9 @@ function renderChatAbierto(){
   const msgsCont = document.getElementById('chatMsgs');
   conv.mensajes.forEach(m => pintarBurbuja(msgsCont, m));
   msgsCont.scrollTop = msgsCont.scrollHeight;
+
+  // Actualizar turnos del calendario si hay un día seleccionado
+  if(calDiaSeleccionado) renderTurnos(calDiaSeleccionado);
 }
 
 function pintarBurbuja(cont, m){
@@ -1700,20 +1722,10 @@ function uid(){ return 'wa'+Date.now().toString(36)+Math.random().toString(36).s
 function soloDigitos(s){ return String(s||'').replace(/\D/g,''); }
 let _syncClientesEnCurso = false;
 
-async function agendarClientesTodosCanales(){
+async function agendarClientesWhatsapp(){
   if(_syncClientesEnCurso) return;
-
-  // Recopilar contactos de todos los canales: whatsapp, instagram, messenger, tiktok
-  const contactos = []; // { canal, de }
-  ['whatsapp','instagram','messenger','tiktok'].forEach(canal => {
-    if(conversaciones[canal]){
-      Object.keys(conversaciones[canal]).forEach(de => {
-        contactos.push({ canal, de });
-      });
-    }
-  });
-  if(!contactos.length) return;
-
+  const waConvs = conversaciones['whatsapp'] ? Object.keys(conversaciones['whatsapp']) : [];
+  if(!waConvs.length) return;
   _syncClientesEnCurso = true;
   try{
     // Traer lo último de clientes desde la nube para no pisar cambios del CRM
@@ -1721,41 +1733,27 @@ async function agendarClientesTodosCanales(){
     const { data } = await sb.from('crm_datos').select('valor').eq('clave','clientes').maybeSingle();
     clientesCRM = (data && Array.isArray(data.valor)) ? data.valor : [];
 
-    // Set de teléfonos existentes (para WhatsApp)
     const telsExistentes = new Set(clientesCRM.map(c => soloDigitos(c.telefono)).filter(Boolean));
-    // Set de usuarios existentes (para Instagram, Messenger, TikTok) — guardados en campo telefono como @usuario
-    const usersExistentes = new Set(clientesCRM.map(c => c.telefono).filter(t => t && t.startsWith('@')));
-
     let maxNum = clientesCRM.reduce((mx,c)=>{
       if(c.nombre==='Cliente' && /^\d+$/.test(String(c.apellido||''))) return Math.max(mx, parseInt(c.apellido,10));
       return mx;
     }, 0);
 
     let agregados = 0;
-    contactos.forEach(({ canal, de }) => {
-      if(canal === 'whatsapp'){
-        const tel = soloDigitos(de);
-        if(!tel || telsExistentes.has(tel)) return;
-        maxNum++;
-        clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:de, direccion:'' });
-        telsExistentes.add(tel);
-        agregados++;
-      } else {
-        // Instagram, Messenger, TikTok — guardar nombre de usuario
-        const usuario = '@' + de.replace(/^@/,'');
-        if(usersExistentes.has(usuario)) return;
-        maxNum++;
-        clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:usuario, direccion:'' });
-        usersExistentes.add(usuario);
-        agregados++;
-      }
+    waConvs.forEach(de => {
+      const tel = soloDigitos(de);
+      if(!tel || telsExistentes.has(tel)) return; // ya agendado (por el CRM o automáticamente)
+      maxNum++;
+      clientesCRM.push({ id: uid(), nombre:'Cliente', apellido:String(maxNum), dni:'', telefono:de, direccion:'' });
+      telsExistentes.add(tel);
+      agregados++;
     });
 
     if(agregados > 0){
       await sb.from('crm_datos').upsert({ clave:'clientes', valor: clientesCRM, actualizado_en: new Date().toISOString() });
     }
   }catch(e){
-    console.error('No se pudieron agendar clientes en el CRM', e);
+    console.error('No se pudieron agendar clientes de WhatsApp en el CRM', e);
   }finally{
     _syncClientesEnCurso = false;
   }
@@ -1831,7 +1829,7 @@ async function iniciarApp(){
 
   reaplicarEstadosAsignaciones();
   await cargarVentasMensajes();
-  await agendarClientesTodosCanales();
+  await agendarClientesWhatsapp();
 
   renderFiltros();
   renderListaUnificada();
@@ -1860,7 +1858,7 @@ async function iniciarApp(){
     .on('postgres_changes', { event:'INSERT', schema:'public', table:'mensajes' }, payload => {
       const m = payload.new;
       agregarMensajeAConversacion(m.canal, m);
-      if(m.direccion === 'entrante') agendarClientesTodosCanales();
+      if(m.canal === 'whatsapp' && m.direccion === 'entrante') agendarClientesWhatsapp();
       renderListaUnificada();
       if(conversacionAbierta && conversacionAbierta.canal === m.canal && conversacionAbierta.de === m.de){
         const msgsCont = document.getElementById('chatMsgs');
@@ -1881,6 +1879,187 @@ async function iniciarApp(){
       }
     });
 }
+
+/* ========== ALMANAQUE / CALENDARIO DE TURNOS ========== */
+const CAL_DIRECCION_DEFAULT = 'Alsina 16, localidad de Ramos Mejia, Buenos Aires';
+let calMesActual = new Date().getMonth();
+let calAnioActual = new Date().getFullYear();
+let calDiaSeleccionado = null;
+
+const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function calMesAnterior(){
+  calMesActual--;
+  if(calMesActual < 0){ calMesActual = 11; calAnioActual--; }
+  calDiaSeleccionado = null;
+  renderCalendario();
+}
+function calMesSiguiente(){
+  calMesActual++;
+  if(calMesActual > 11){ calMesActual = 0; calAnioActual++; }
+  calDiaSeleccionado = null;
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const label = document.getElementById('calMesLabel');
+  const grid = document.getElementById('calGrid');
+  const slots = document.getElementById('calSlots');
+  if(!label || !grid) return;
+
+  label.textContent = `${MESES_ES[calMesActual]} ${calAnioActual}`;
+
+  const primerDia = new Date(calAnioActual, calMesActual, 1);
+  const ultimoDia = new Date(calAnioActual, calMesActual + 1, 0);
+  const totalDias = ultimoDia.getDate();
+  // getDay: 0=Dom, ajustar a Lu=0
+  let startOffset = primerDia.getDay() - 1;
+  if(startOffset < 0) startOffset = 6;
+
+  const hoy = new Date();
+  const hoyStr = `${hoy.getFullYear()}-${hoy.getMonth()}-${hoy.getDate()}`;
+
+  let html = '';
+  // Celdas vacías antes del primer día
+  for(let i = 0; i < startOffset; i++){
+    html += `<div class="cal-day empty"></div>`;
+  }
+  for(let d = 1; d <= totalDias; d++){
+    const fecha = new Date(calAnioActual, calMesActual, d);
+    const diaSemana = fecha.getDay(); // 0=Dom
+    const esHoy = `${calAnioActual}-${calMesActual}-${d}` === hoyStr;
+    const esDomingo = diaSemana === 0;
+    const esPasado = fecha < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const seleccionado = calDiaSeleccionado === d;
+
+    let clases = 'cal-day';
+    if(esHoy) clases += ' today';
+    if(seleccionado) clases += ' selected';
+    if(esDomingo) clases += ' domingo';
+    if(esPasado && !esHoy) clases += ' past';
+
+    const clickable = !esDomingo && !(esPasado && !esHoy);
+    html += `<div class="${clases}" ${clickable ? `onclick="calSeleccionarDia(${d})"` : ''}>${d}</div>`;
+  }
+  grid.innerHTML = html;
+
+  // Render slots si hay día seleccionado
+  if(calDiaSeleccionado && slots){
+    renderTurnos(calDiaSeleccionado);
+  } else if(slots){
+    slots.innerHTML = `<div class="cal-no-conv">Seleccioná un día del calendario para ver los turnos disponibles.</div>`;
+  }
+}
+
+function calSeleccionarDia(dia){
+  calDiaSeleccionado = dia;
+  renderCalendario();
+}
+
+function generarTurnos(diaSemana){
+  // diaSemana: 0=Dom, 1=Lun, ..., 6=Sab
+  const turnos = [];
+  if(diaSemana === 0) return turnos; // Domingo: sin turnos
+
+  if(diaSemana >= 1 && diaSemana <= 5){
+    // Lunes a Viernes: 10:00-13:00 y 14:00-18:00
+    for(let h = 10; h < 13; h++){
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 12 ? '13' : (h+1).toString().padStart(2,'0')}:00` });
+    }
+    turnos.push({ break: true }); // Separador de almuerzo
+    for(let h = 14; h < 18; h++){
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 17 ? '18' : (h+1).toString().padStart(2,'0')}:00` });
+    }
+  } else if(diaSemana === 6){
+    // Sábado: 10:00-18:00 (corrido)
+    for(let h = 10; h < 18; h++){
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:00`, fin:`${h.toString().padStart(2,'0')}:30` });
+      turnos.push({ inicio:`${h.toString().padStart(2,'0')}:30`, fin:`${h === 17 ? '18' : (h+1).toString().padStart(2,'0')}:00` });
+    }
+  }
+  return turnos;
+}
+
+function renderTurnos(dia){
+  const slots = document.getElementById('calSlots');
+  if(!slots) return;
+  const fecha = new Date(calAnioActual, calMesActual, dia);
+  const diaSemana = fecha.getDay();
+  const nombreDia = DIAS_ES[diaSemana];
+  const turnos = generarTurnos(diaSemana);
+
+  if(turnos.length === 0){
+    slots.innerHTML = `<div class="cal-slots-empty">🚫 Los domingos no hay turnos disponibles.</div>`;
+    return;
+  }
+
+  let html = `<div class="cal-slots-title">📅 ${nombreDia} ${dia} de ${MESES_ES[calMesActual]} <span class="cal-day-badge">${turnos.filter(t=>!t.break).length} turnos</span></div>`;
+
+  if(!conversacionAbierta){
+    html += `<div class="cal-slots-empty">Seleccioná una conversación para poder enviar un turno al cliente.</div>`;
+    slots.innerHTML = html;
+    return;
+  }
+
+  turnos.forEach(t => {
+    if(t.break){
+      html += `<div class="cal-turno-break">— almuerzo —</div>`;
+      return;
+    }
+    html += `<div class="cal-slot" onclick="enviarTurnoCliente(${dia},'${t.inicio}','${t.fin}')">
+      <span class="slot-hora">${t.inicio} – ${t.fin} hs</span>
+      <span class="slot-send">📤 Enviar</span>
+    </div>`;
+  });
+
+  slots.innerHTML = html;
+}
+
+async function enviarTurnoCliente(dia, horaInicio, horaFin){
+  if(!conversacionAbierta) return;
+  const { canal, de } = conversacionAbierta;
+  const direccion = document.getElementById('calDireccion')?.textContent || CAL_DIRECCION_DEFAULT;
+  const mesNombre = MESES_ES[calMesActual].toLowerCase();
+  const texto = `Confirmame: Te esperamos el dia ${dia} de ${mesNombre} en el horario de ${horaInicio} a ${horaFin} hs, en ${direccion}.`;
+
+  if(!confirm(`¿Enviar este turno al cliente?\n\n${texto}`)) return;
+
+  // Reclamar conversación si es agente
+  if(!esAdmin()){
+    const puedo = await reclamarConversacion(canal, de);
+    if(!puedo){
+      renderChatAbierto();
+      renderListaUnificada();
+      return;
+    }
+    renderListaUnificada();
+  }
+
+  try{
+    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal, destinatario: de, texto } });
+    if(error) throw new Error(error.message || 'Error de conexión');
+    if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
+    // Feedback visual
+    const slot = event?.target?.closest('.cal-slot');
+    if(slot){
+      slot.style.background = 'rgba(78,224,138,0.15)';
+      slot.style.borderColor = 'var(--green)';
+      slot.querySelector('.slot-send').textContent = '✓ Enviado';
+      slot.querySelector('.slot-send').style.color = 'var(--green)';
+      slot.querySelector('.slot-send').style.borderColor = 'var(--green)';
+      slot.querySelector('.slot-send').style.background = 'rgba(78,224,138,0.12)';
+      slot.style.pointerEvents = 'none';
+    }
+  }catch(e){
+    alert('No se pudo enviar el turno: ' + (e.message || e));
+  }
+}
+
+// Inicializar calendario al cargar
+document.addEventListener('DOMContentLoaded', () => { renderCalendario(); });
 
 // === PWA: Registro del Service Worker ===
 if('serviceWorker' in navigator){
