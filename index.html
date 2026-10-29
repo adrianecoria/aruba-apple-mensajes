@@ -123,6 +123,34 @@ input{font-family:inherit;}
 .dolar-bar .dolar-refresh.loading svg{animation:spin 1s linear infinite;}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
+/* ===== SIMULADOR DE CUOTAS BAR ===== */
+.sim-bar{display:flex; align-items:center; gap:10px; padding:7px 20px; border-bottom:1px solid var(--card-b); flex-shrink:0; background:rgba(0,180,255,0.04); flex-wrap:wrap;}
+.sim-bar .sim-label{font-size:11px; color:#00b4ff; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; display:flex; align-items:center; gap:5px;}
+.sim-bar .sim-field{display:flex; align-items:center; gap:4px; font-size:12px; color:var(--txt2);}
+.sim-bar .sim-field label{font-size:11px; color:var(--txt3); font-weight:600; white-space:nowrap;}
+.sim-bar .sim-field input, .sim-bar .sim-field select{background:rgba(255,255,255,0.06); border:1px solid var(--card-b); border-radius:8px; color:var(--txt); font-size:12.5px; padding:5px 8px; outline:none; font-family:'Inter';}
+.sim-bar .sim-field input{width:80px; text-align:right;}
+.sim-bar .sim-field select{padding:5px 6px; cursor:pointer;}
+.sim-bar .sim-field input:focus, .sim-bar .sim-field select:focus{border-color:#00b4ff; box-shadow:0 0 6px rgba(0,180,255,0.25);}
+.sim-bar .sim-sep{width:1px; height:18px; background:var(--card-b);}
+.btn-simular-bar{padding:5px 14px; font-size:11.5px; font-weight:700; border:1px solid rgba(0,180,255,0.5); background:rgba(0,180,255,0.12); color:#00b4ff; border-radius:8px; cursor:pointer; transition:all 0.2s; font-family:'Inter'; white-space:nowrap;}
+.btn-simular-bar:hover{background:rgba(0,180,255,0.25); border-color:#00b4ff; box-shadow:0 0 12px rgba(0,180,255,0.3);}
+.sim-result-overlay{position:fixed; inset:0; z-index:10000; background:rgba(8,4,14,0.75); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; padding:20px;}
+.sim-result-card{width:440px; max-width:95%; background:rgba(18,10,28,0.98); border:1px solid rgba(0,180,255,0.3); border-radius:18px; box-shadow:0 25px 60px rgba(0,0,0,0.5), 0 0 30px rgba(0,180,255,0.1); overflow:hidden;}
+.sim-result-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(0,180,255,0.15);}
+.sim-result-head h3{font-family:'Manrope'; font-size:15px; font-weight:800; color:#00b4ff; display:flex; align-items:center; gap:8px;}
+.sim-result-body{padding:20px; font-family:'Manrope';}
+.sim-result-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04);}
+.sim-result-row:last-child{border-bottom:none;}
+.sim-result-label{font-size:12.5px; color:var(--txt2); font-weight:600;}
+.sim-result-val{font-size:14px; font-weight:800; color:var(--txt);}
+.sim-result-val.accent{color:#00b4ff; font-size:15px; text-shadow:0 0 8px rgba(0,180,255,0.3);}
+.sim-result-actions{padding:14px 20px; border-top:1px solid rgba(0,180,255,0.15); display:flex; gap:10px;}
+.btn-enviar-sim{flex:1; padding:11px; font-size:13px; font-weight:700; border:1px solid rgba(0,180,255,0.5); background:rgba(0,180,255,0.15); color:#00b4ff; border-radius:10px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
+.btn-enviar-sim:hover{background:rgba(0,180,255,0.3); box-shadow:0 0 16px rgba(0,180,255,0.3);}
+.btn-cerrar-sim{padding:11px 18px; font-size:13px; font-weight:600; border:1px solid var(--card-b); background:rgba(255,255,255,0.04); color:var(--txt3); border-radius:10px; cursor:pointer; transition:all 0.2s; font-family:'Inter';}
+.btn-cerrar-sim:hover{background:rgba(255,255,255,0.08); color:var(--txt);}
+
 /* ===== FILTROS ===== */
 .filtros{display:flex; gap:8px; padding:10px 20px; flex-shrink:0; overflow-x:auto; align-items:center;}
 .filtro-btn{padding:7px 14px; border-radius:20px; border:1px solid var(--card-b); background:rgba(255,255,255,0.03); color:var(--txt2); font-size:12.5px; font-weight:600; white-space:nowrap; display:flex; align-items:center; gap:7px; cursor:pointer; transition:all 0.2s;}
@@ -499,6 +527,37 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
     <button class="dolar-refresh" id="dolarRefreshBtn" onclick="refreshDolar()" title="Actualizar cotización">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
     </button>
+  </div>
+
+  <!-- SIMULADOR DE CUOTAS BAR -->
+  <div class="sim-bar" id="simBar">
+    <span class="sim-label">📊 Simulador</span>
+    <div class="sim-sep"></div>
+    <div class="sim-field"><label>Precio USD</label><input type="number" id="simPrecioMsg" placeholder="0" oninput="simMsgCalc()"></div>
+    <div class="sim-field"><label>Anticipo</label><input type="number" id="simAnticipoMsg" placeholder="0" oninput="simMsgCalc()"></div>
+    <div class="sim-field"><label>Cuotas</label>
+      <select id="simCuotasMsg" onchange="simMsgCalc()">
+        <option value="3">3</option><option value="6">6</option><option value="9">9</option><option value="12">12</option>
+      </select>
+    </div>
+    <div class="sim-field"><label>Frecuencia</label>
+      <select id="simFrecMsg">
+        <option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual" selected>Mensual</option>
+      </select>
+    </div>
+    <button class="btn-simular-bar" onclick="simMsgSimular()">SIMULAR</button>
+  </div>
+
+  <!-- Modal resultado simulación -->
+  <div class="sim-result-overlay" id="simResultOverlay">
+    <div class="sim-result-card">
+      <div class="sim-result-head"><h3>📊 Plan de Financiación</h3><button class="sel-close" onclick="cerrarSimResult()">✕</button></div>
+      <div class="sim-result-body" id="simResultBody"></div>
+      <div class="sim-result-actions">
+        <button class="btn-enviar-sim" id="btnEnviarSim" onclick="enviarSimAlCliente()">📤 Enviar al cliente</button>
+        <button class="btn-cerrar-sim" onclick="cerrarSimResult()">Cerrar</button>
+      </div>
+    </div>
   </div>
 
   <div id="accesosBox" class="config-box" style="margin:0 20px;">
@@ -1177,6 +1236,86 @@ function cerrarModalFinanciacion(){
   const overlay = document.getElementById('finOverlay');
   if(overlay) overlay.style.display = 'none';
   _finCtx = null;
+}
+
+/* ---------- SIMULADOR DE CUOTAS (barra superior) ---------- */
+let _simMsgData = null;
+
+function simMsgCalc(){
+  const precio = Number(document.getElementById('simPrecioMsg')?.value) || 0;
+  const anticipo = Number(document.getElementById('simAnticipoMsg')?.value) || 0;
+  const cuotas = Number(document.getElementById('simCuotasMsg')?.value) || 3;
+  const tasas = {3:40, 6:60, 9:80, 12:120};
+  const interes = tasas[cuotas] || 40;
+  const base = Math.max(0, precio - anticipo);
+  const montoConInteres = Math.round(base * (1 + interes / 100));
+  const valorCuota = cuotas > 0 ? Math.round(montoConInteres / cuotas) : 0;
+  _simMsgData = { precio, anticipo, cuotas, interes, base, montoConInteres, valorCuota };
+}
+
+function simMsgSimular(){
+  simMsgCalc();
+  if(!_simMsgData || _simMsgData.precio <= 0){
+    alert('Ingresá un precio válido'); return;
+  }
+  if(_simMsgData.anticipo >= _simMsgData.precio){
+    alert('El anticipo debe ser menor al precio'); return;
+  }
+  if(!conversacionAbierta){
+    alert('Abrí una conversación primero para poder enviar la simulación'); return;
+  }
+  const d = _simMsgData;
+  const frec = document.getElementById('simFrecMsg')?.value || 'mensual';
+  const frecText = frec === 'semanal' ? 'Semanal' : frec === 'quincenal' ? 'Quincenal' : 'Mensual';
+  d.frecuencia = frec;
+  d.frecuenciaText = frecText;
+
+  const body = document.getElementById('simResultBody');
+  body.innerHTML = `
+    <div class="sim-result-row"><span class="sim-result-label">Anticipo / Seña</span><span class="sim-result-val accent">${d.anticipo} USD</span></div>
+    <div class="sim-result-row"><span class="sim-result-label">Monto a financiar</span><span class="sim-result-val">${d.base} USD</span></div>
+    <div class="sim-result-row"><span class="sim-result-label">Cantidad de cuotas</span><span class="sim-result-val">${d.cuotas}</span></div>
+    <div class="sim-result-row"><span class="sim-result-label">Interés aplicado</span><span class="sim-result-val">${d.interes}%</span></div>
+    <div class="sim-result-row"><span class="sim-result-label">Valor de cada cuota</span><span class="sim-result-val accent">${d.valorCuota} USD</span></div>
+    <div class="sim-result-row"><span class="sim-result-label">Frecuencia de pago</span><span class="sim-result-val">${frecText}</span></div>
+  `;
+  document.getElementById('simResultOverlay').style.display = 'flex';
+}
+
+function cerrarSimResult(){
+  document.getElementById('simResultOverlay').style.display = 'none';
+}
+
+async function enviarSimAlCliente(){
+  if(!_simMsgData || !conversacionAbierta) return;
+  const d = _simMsgData;
+  const { canal, de } = conversacionAbierta;
+
+  const texto = `📊 *PLAN DE FINANCIACIÓN*\n\nAnticipo / Seña: ${d.anticipo} USD\nMonto a financiar: ${d.base} USD\nCantidad de cuotas: ${d.cuotas}\nInterés aplicado: ${d.interes}%\nValor de cada cuota: ${d.valorCuota} USD\nFrecuencia de pago: ${d.frecuenciaText}`;
+
+  const btn = document.getElementById('btnEnviarSim');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+  if(!esAdmin()){
+    const puedo = await reclamarConversacion(canal, de);
+    if(!puedo){ renderChatAbierto(); renderListaUnificada(); cerrarSimResult(); if(btn){ btn.disabled=false; btn.textContent='📤 Enviar al cliente'; } return; }
+  }
+
+  try{
+    const { data, error } = await sb.functions.invoke('enviar-mensaje', { body: { canal, destinatario:de, texto } });
+    if(error) throw new Error(error.message || 'Error');
+    if(data && !data.ok) throw new Error(data.error || 'Error al enviar');
+    cerrarSimResult();
+    // Limpiar campos
+    document.getElementById('simPrecioMsg').value = '';
+    document.getElementById('simAnticipoMsg').value = '';
+    document.getElementById('simCuotasMsg').value = '3';
+    document.getElementById('simFrecMsg').value = 'mensual';
+    _simMsgData = null;
+  }catch(e){
+    alert('No se pudo enviar: ' + (e.message||e));
+  }
+  if(btn){ btn.disabled = false; btn.textContent = '📤 Enviar al cliente'; }
 }
 
 async function quitarEstadoVenta(canalId, deCodificado){
