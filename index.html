@@ -1114,10 +1114,10 @@ function seleccionarEquipoFinanciacion(equipoId){
       <div class="fin-row"><span class="fin-label">Anticipo / Seña (50%):</span><span class="fin-value">${anticipo} USD</span></div>
       <div class="fin-row"><span class="fin-label">Cantidad de cuotas:</span>
         <select class="fin-select" id="finCuotas" onchange="actualizarResumenFinanciacion('${equipoId}')">
-          <option value="3">3 cuotas (40% interés)</option>
-          <option value="6">6 cuotas (60% interés)</option>
-          <option value="9">9 cuotas (80% interés)</option>
-          <option value="12">12 cuotas (120% interés)</option>
+          <option value="3">3 cuotas (32% interés)</option>
+          <option value="6">6 cuotas (52% interés)</option>
+          <option value="9">9 cuotas (63% interés)</option>
+          <option value="12">12 cuotas (63% interés)</option>
         </select>
       </div>
       <div class="fin-resumen" id="finResumen"></div>
@@ -1135,8 +1135,8 @@ function actualizarResumenFinanciacion(equipoId){
   const restante = sugerido - anticipo;
   const sel = document.getElementById('finCuotas');
   const cuotas = sel ? Number(sel.value) : 3;
-  const tasas = {3:0.40, 6:0.60, 9:0.80, 12:1.20};
-  const interes = tasas[cuotas] || 0.40;
+  const tasas = {3:0.32, 6:0.52, 9:0.63, 12:0.63};
+  const interes = tasas[cuotas] || 0.32;
   const montoFinanciado = Math.round(restante * (1 + interes));
   const valorCuota = Math.round(montoFinanciado / cuotas);
   const cont = document.getElementById('finResumen');
@@ -1163,8 +1163,8 @@ async function confirmarFinanciacion(equipoId){
   const restante = sugerido - anticipo;
   const sel = document.getElementById('finCuotas');
   const cuotas = sel ? Number(sel.value) : 3;
-  const tasas = {3:0.40, 6:0.60, 9:0.80, 12:1.20};
-  const interes = tasas[cuotas] || 0.40;
+  const tasas = {3:0.32, 6:0.52, 9:0.63, 12:0.63};
+  const interes = tasas[cuotas] || 0.32;
   const montoFinanciado = Math.round(restante * (1 + interes));
   const valorCuota = Math.round(montoFinanciado / cuotas);
 
@@ -1245,8 +1245,8 @@ function simMsgCalc(){
   const precio = Number(document.getElementById('simPrecioMsg')?.value) || 0;
   const anticipo = Number(document.getElementById('simAnticipoMsg')?.value) || 0;
   const cuotas = Number(document.getElementById('simCuotasMsg')?.value) || 3;
-  const tasas = {3:40, 6:60, 9:80, 12:120};
-  const interes = tasas[cuotas] || 40;
+  const tasas = {3:32, 6:52, 9:63, 12:63};
+  const interes = tasas[cuotas] || 32;
   const base = Math.max(0, precio - anticipo);
   const montoConInteres = Math.round(base * (1 + interes / 100));
   const valorCuota = cuotas > 0 ? Math.round(montoConInteres / cuotas) : 0;
