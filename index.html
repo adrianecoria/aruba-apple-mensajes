@@ -875,9 +875,44 @@ async function cerrarConv(canalId, deCodificado){
 async function reabrirConv(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
-  if(conv){ conv.cerrada = false; conv.estadoVenta = null; }
+  const estadoAnterior = conv ? conv.estadoVenta : null;
+  const nroVenta = conv ? conv.nroVenta : null;
+
+  if(conv){ conv.cerrada = false; conv.estadoVenta = null; conv.nroVenta = null; conv.equipoVendido = null; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'activa');
+
+  // Si era una venta cerrada, eliminar la reserva de ventas_mensajes y liberar el equipo
+  if(estadoAnterior === 'venta' && nroVenta){
+    try{
+      const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_mensajes').maybeSingle();
+      if(data && Array.isArray(data.valor)) ventasMensajes = data.valor;
+    }catch(e){ /* seguimos con lo que tengamos */ }
+    const reserva = ventasMensajes.find(r => r.nro_venta === nroVenta);
+    const equipoId = reserva ? reserva.equipo_id : null;
+    ventasMensajes = ventasMensajes.filter(r => r.nro_venta !== nroVenta);
+    try{
+      await sb.from('crm_datos').upsert({ clave:'ventas_mensajes', valor: ventasMensajes, actualizado_en: new Date().toISOString() });
+    }catch(e){ console.error('No se pudo actualizar ventas_mensajes al reabrir', e); }
+    // Restaurar equipo a disponible en stock
+    if(equipoId) await marcarEquipoEstado(equipoId, 'disponible');
+  }
+
+  // Si era posible financiación, eliminar la propuesta de ventas_cuotas y liberar el equipo
+  if(estadoAnterior === 'financiacion'){
+    try{
+      const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_cuotas').maybeSingle();
+      if(data && Array.isArray(data.valor)){
+        const cuotasArr = data.valor;
+        const propuesta = cuotasArr.find(r => r.tipo === 'posible_financiacion' && r.canal === canalId && r.de === de);
+        const equipoIdFin = propuesta ? propuesta.equipo_id : null;
+        const cuotasFiltradas = cuotasArr.filter(r => !(r.tipo === 'posible_financiacion' && r.canal === canalId && r.de === de));
+        await sb.from('crm_datos').upsert({ clave:'ventas_cuotas', valor: cuotasFiltradas, actualizado_en: new Date().toISOString() });
+        // Restaurar equipo a disponible (la financiación no reserva el equipo, pero por seguridad)
+        if(equipoIdFin) await marcarEquipoEstado(equipoIdFin, 'disponible');
+      }
+    }catch(e){ console.error('No se pudo limpiar la propuesta de financiación al reabrir', e); }
+  }
 }
 function generarNroVenta(existentes){
   const usados = new Set((existentes||[]).map(r => r.nro_venta));
