@@ -610,7 +610,16 @@ select{width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--car
 <script>
 const SUPABASE_URL = 'https://vbbdxqxnjzziqteomuxp.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiYmR4cXhuanp6aXF0ZW9tdXhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NTE3MzUsImV4cCI6MjEwNjIyNzczNX0.1mFzuiOIsfZZvJnALkoUOiIspyzGdJKhUGm7dzZnnds';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function crearClienteMensajes(token){
+  const opts = {};
+  if(token){
+    opts.global = { headers: { 'x-session-token': token } };
+  }
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, opts);
+}
+const tokenMsgGuardado = localStorage.getItem('msg_session_token');
+let sb = crearClienteMensajes(tokenMsgGuardado || null);
 
 const CANALES = [
   { id:'whatsapp', nombre:'WhatsApp', color:'var(--wa)', campos:[
@@ -706,22 +715,17 @@ async function intentarLogin(){
   err.textContent = '';
   if(!u || !p){ err.textContent = 'Completá usuario y contraseña.'; return; }
   try{
-    // Usuarios unificados con el CRM: se leen de la tabla crm_datos (mismas credenciales en ambas apps)
-    const { data, error } = await sb.from('crm_datos').select('clave,valor').in('clave', ['usuarios','admin_cred']);
+    const { data, error } = await sb.rpc('iniciar_sesion_mensajes', { p_usuario: u, p_clave: p });
     if(error) throw error;
-    const mapa = {};
-    (data||[]).forEach(row => mapa[row.clave] = row.valor);
-    const adminCred = mapa.admin_cred || { usuario:'admin', clave:'admin' };
-    const vendedores = Array.isArray(mapa.usuarios) ? mapa.usuarios : [];
+    const res = typeof data === 'string' ? JSON.parse(data) : data;
+    if(!res.ok){ err.textContent = res.error || 'Usuario o contraseña incorrectos.'; return; }
 
-    let sesion = null;
-    if(u === adminCred.usuario && p === adminCred.clave){
-      sesion = { rol:'admin', nombre:'Administrador', usuario:u, vendedorId:null };
-    } else {
-      const vend = vendedores.find(x => x.usuario && x.usuario === u && x.clave === p);
-      if(vend) sesion = { rol:'agente', nombre:(vend.nombre + ' ' + (vend.apellido||'')).trim(), usuario:vend.usuario, vendedorId:vend.id };
-    }
-    if(!sesion){ err.textContent = 'Usuario o contraseña incorrectos.'; return; }
+    /* Guardar token y recrear cliente con header de sesión */
+    localStorage.setItem('msg_session_token', res.token);
+    sb = crearClienteMensajes(res.token);
+
+    let sesion = { rol: res.rol === 'admin' ? 'admin' : 'agente', nombre: res.nombre, usuario: u, vendedorId: null };
+    localStorage.setItem('msg_sesion_actual', JSON.stringify(sesion));
 
     sesionActual = sesion;
     document.getElementById('loginOverlay').style.display = 'none';
@@ -729,14 +733,18 @@ async function intentarLogin(){
     document.getElementById('sesionNombre').textContent = sesionActual.nombre;
     if(esAdmin()){
       document.getElementById('linkConfigAdmin').style.display = 'inline';
-      // Los accesos ahora se administran desde el CRM (sección Usuarios)
     }
     iniciarApp();
   }catch(e){
     err.textContent = 'No se pudo verificar el acceso: ' + (e.message||e);
   }
 }
-function cerrarSesion(){ location.reload(); }
+async function cerrarSesion(){
+  try{ await sb.rpc('cerrar_sesion'); }catch(e){ console.error('Error cerrando sesión:', e); }
+  localStorage.removeItem('msg_session_token');
+  localStorage.removeItem('msg_sesion_actual');
+  location.reload();
+}
 
 /* ---------- GESTIÓN DE ACCESOS (solo admin) ---------- */
 function toggleAccesosBox(){
@@ -798,7 +806,7 @@ async function cargarAsignaciones(){
     asignaciones[claveAsig(a.canal, a.de)] = a;
     const conv = conversaciones[a.canal]?.[a.de];
     if(conv && a.estado){
-      if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = false; }
+      if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = true; }
       else if(a.estado === 'indeciso'){ conv.estadoVenta = 'indeciso'; }
       else if(a.estado === 'cerrada'){ conv.cerrada = true; conv.estadoVenta = null; }
       else { conv.cerrada = false; conv.estadoVenta = null; }
@@ -875,44 +883,9 @@ async function cerrarConv(canalId, deCodificado){
 async function reabrirConv(canalId, deCodificado){
   const de = decodeURIComponent(deCodificado);
   const conv = conversaciones[canalId]?.[de];
-  const estadoAnterior = conv ? conv.estadoVenta : null;
-  const nroVenta = conv ? conv.nroVenta : null;
-
-  if(conv){ conv.cerrada = false; conv.estadoVenta = null; conv.nroVenta = null; conv.equipoVendido = null; }
+  if(conv){ conv.cerrada = false; conv.estadoVenta = null; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'activa');
-
-  // Si era una venta cerrada, eliminar la reserva de ventas_mensajes y liberar el equipo
-  if(estadoAnterior === 'venta' && nroVenta){
-    try{
-      const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_mensajes').maybeSingle();
-      if(data && Array.isArray(data.valor)) ventasMensajes = data.valor;
-    }catch(e){ /* seguimos con lo que tengamos */ }
-    const reserva = ventasMensajes.find(r => r.nro_venta === nroVenta);
-    const equipoId = reserva ? reserva.equipo_id : null;
-    ventasMensajes = ventasMensajes.filter(r => r.nro_venta !== nroVenta);
-    try{
-      await sb.from('crm_datos').upsert({ clave:'ventas_mensajes', valor: ventasMensajes, actualizado_en: new Date().toISOString() });
-    }catch(e){ console.error('No se pudo actualizar ventas_mensajes al reabrir', e); }
-    // Restaurar equipo a disponible en stock
-    if(equipoId) await marcarEquipoEstado(equipoId, 'disponible');
-  }
-
-  // Si era posible financiación, eliminar la propuesta de ventas_cuotas y liberar el equipo
-  if(estadoAnterior === 'financiacion'){
-    try{
-      const { data } = await sb.from('crm_datos').select('valor').eq('clave','ventas_cuotas').maybeSingle();
-      if(data && Array.isArray(data.valor)){
-        const cuotasArr = data.valor;
-        const propuesta = cuotasArr.find(r => r.tipo === 'posible_financiacion' && r.canal === canalId && r.de === de);
-        const equipoIdFin = propuesta ? propuesta.equipo_id : null;
-        const cuotasFiltradas = cuotasArr.filter(r => !(r.tipo === 'posible_financiacion' && r.canal === canalId && r.de === de));
-        await sb.from('crm_datos').upsert({ clave:'ventas_cuotas', valor: cuotasFiltradas, actualizado_en: new Date().toISOString() });
-        // Restaurar equipo a disponible (la financiación no reserva el equipo, pero por seguridad)
-        if(equipoIdFin) await marcarEquipoEstado(equipoIdFin, 'disponible');
-      }
-    }catch(e){ console.error('No se pudo limpiar la propuesta de financiación al reabrir', e); }
-  }
 }
 function generarNroVenta(existentes){
   const usados = new Set((existentes||[]).map(r => r.nro_venta));
@@ -976,7 +949,7 @@ async function marcarVenta(canalId, deCodificado, equipo){
     if(equipo && equipo.id) await marcarEquipoEstado(equipo.id, 'reservado');
   }
 
-  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = false; conv.nroVenta = nro; if(equipo) conv.equipoVendido = equipo.modelo; }
+  if(conv){ conv.estadoVenta = 'venta'; conv.cerrada = true; conv.nroVenta = nro; if(equipo) conv.equipoVendido = equipo.modelo; }
   renderListaUnificada(); renderChatAbierto();
   await actualizarEstadoDB(canalId, de, 'venta');
 
@@ -1170,8 +1143,8 @@ function actualizarResumenFinanciacion(equipoId){
   const restante = sugerido - anticipo;
   const sel = document.getElementById('finCuotas');
   const cuotas = sel ? Number(sel.value) : 3;
-  const tasas = {3:0.55, 6:0.75, 9:0.53, 12:0.73};
-  const interes = tasas[cuotas] || 0.55;
+  const tasas = {3:0.32, 6:0.52, 9:0.63, 12:0.63};
+  const interes = tasas[cuotas] || 0.32;
   const montoFinanciado = Math.round(restante * (1 + interes));
   const valorCuota = Math.round(montoFinanciado / cuotas);
   const cont = document.getElementById('finResumen');
@@ -1198,8 +1171,8 @@ async function confirmarFinanciacion(equipoId){
   const restante = sugerido - anticipo;
   const sel = document.getElementById('finCuotas');
   const cuotas = sel ? Number(sel.value) : 3;
-  const tasas = {3:0.55, 6:0.75, 9:0.53, 12:0.73};
-  const interes = tasas[cuotas] || 0.55;
+  const tasas = {3:0.32, 6:0.52, 9:0.63, 12:0.63};
+  const interes = tasas[cuotas] || 0.32;
   const montoFinanciado = Math.round(restante * (1 + interes));
   const valorCuota = Math.round(montoFinanciado / cuotas);
 
@@ -1280,8 +1253,8 @@ function simMsgCalc(){
   const precio = Number(document.getElementById('simPrecioMsg')?.value) || 0;
   const anticipo = Number(document.getElementById('simAnticipoMsg')?.value) || 0;
   const cuotas = Number(document.getElementById('simCuotasMsg')?.value) || 3;
-  const tasas = {3:55, 6:75, 9:53, 12:73};
-  const interes = tasas[cuotas] || 55;
+  const tasas = {3:32, 6:52, 9:63, 12:63};
+  const interes = tasas[cuotas] || 32;
   const base = Math.max(0, precio - anticipo);
   const montoConInteres = Math.round(base * (1 + interes / 100));
   const valorCuota = cuotas > 0 ? Math.round(montoConInteres / cuotas) : 0;
@@ -1634,8 +1607,7 @@ function renderChatAbierto(){
     if(estadoConv !== 'financiacion') btns.push(`<button class="btn-financiacion" onclick="abrirModalFinanciacion('${canal}','${deEnc}')">📋 Posible Financiación</button>`);
     if(!estaCerrada) btns.push(`<button class="btn-cerrar-conv" onclick="cerrarConv('${canal}','${deEnc}')">Cerrar</button>`);
     if(estaCerrada) btns.push(`<button class="btn btn-sm" onclick="reabrirConv('${canal}','${deEnc}')">Reabrir</button>`);
-    if(estadoConv === 'venta' || estadoConv === 'financiacion') btns.push(`<button class="btn btn-sm" onclick="reabrirConv('${canal}','${deEnc}')" style="background:#ef4444;color:#fff;">↩ Cancelar venta</button>`);
-    if(estadoConv && estadoConv !== 'venta' && estadoConv !== 'financiacion') btns.push(`<button class="btn-cerrar-conv" onclick="quitarEstadoVenta('${canal}','${deEnc}')" style="border-color:rgba(255,255,255,0.15);color:var(--txt3)">✕ Quitar estado</button>`);
+    if(estadoConv) btns.push(`<button class="btn-cerrar-conv" onclick="quitarEstadoVenta('${canal}','${deEnc}')" style="border-color:rgba(255,255,255,0.15);color:var(--txt3)">✕ Quitar estado</button>`);
     statusBtns = `<div class="chat-status-btns">${btns.join('')}</div>`;
   }
 
@@ -1883,7 +1855,7 @@ function reaplicarEstadosAsignaciones(){
     const a = asignaciones[key];
     const conv = conversaciones[a.canal]?.[a.de];
     if(!conv || !a.estado) continue;
-    if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = false; }
+    if(a.estado === 'venta'){ conv.estadoVenta = 'venta'; conv.cerrada = true; }
     else if(a.estado === 'indeciso'){ conv.estadoVenta = 'indeciso'; }
     else if(a.estado === 'financiacion'){ conv.estadoVenta = 'financiacion'; }
     else if(a.estado === 'cerrada'){ conv.cerrada = true; conv.estadoVenta = null; }
@@ -2282,6 +2254,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // === PWA: Registro del Service Worker ===
+/* Verificar sesión guardada al cargar */
+(async function(){
+  const tokenGuardado = localStorage.getItem('msg_session_token');
+  if(tokenGuardado){
+    try{
+      const { data, error } = await sb.rpc('sesion_valida');
+      if(!error && data === true){
+        /* Recuperar datos de sesión de localStorage */
+        const sesGuardada = JSON.parse(localStorage.getItem('msg_sesion_actual') || 'null');
+        if(sesGuardada){
+          sesionActual = sesGuardada;
+          document.getElementById('loginOverlay').style.display = 'none';
+          document.getElementById('app').style.display = 'flex';
+          document.getElementById('sesionNombre').textContent = sesionActual.nombre;
+          if(esAdmin()) document.getElementById('linkConfigAdmin').style.display = 'inline';
+          iniciarApp();
+          return;
+        }
+      }
+    }catch(e){ console.warn('Error verificando sesión:', e); }
+    /* Token inválido: limpiar */
+    localStorage.removeItem('msg_session_token');
+    localStorage.removeItem('msg_sesion_actual');
+    sb = crearClienteMensajes(null);
+  }
+})();
+
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
@@ -2292,4 +2291,3 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
-<!-- deploy 1793989235 -->
